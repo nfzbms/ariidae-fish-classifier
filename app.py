@@ -757,4 +757,197 @@ with tab_ariidae:
             <div class="species-detail"><span class="badge">🍽️ Diet</span> {sp['diet']}</div>
             <div class="species-detail"><span class="badge">🔬 Features</span> {sp['features']}</div>
             <div class="species-detail"><span class="badge">💰 Economic Value</span> {sp['economic']}</div>
-            <div class="species-detail"><span class
+            <div class="species-detail"><span class="badge">🌍 Conservation</span> {sp['conservation']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ============================================
+# FRESHWATER SPECIES DETAILS
+# ============================================
+with tab_freshwater:
+    freshwater_species = [
+        {
+            "name": "Boal",
+            "scientific": "Wallago attu",
+            "family": "Siluridae",
+            "size": "100 cm (3.3 ft)",
+            "weight": "Up to 15 kg",
+            "habitat": "Rivers, lakes, floodplains",
+            "diet": "Carnivorous - predatory fish",
+            "features": "Elongated body, large mouth, sharp teeth",
+            "behavior": "Nocturnal predator, aggressive",
+            "economic": "Highly valued food fish",
+            "conservation": "Vulnerable"
+        },
+        {
+            "name": "Kalta",
+            "scientific": "Labeo calbasu",
+            "family": "Cyprinidae",
+            "size": "60 cm (2 ft)",
+            "weight": "Up to 5 kg",
+            "habitat": "Freshwater rivers, reservoirs",
+            "diet": "Omnivorous - algae, insects, detritus",
+            "features": "Golden-brown body, thick lips",
+            "behavior": "Bottom feeder, peaceful",
+            "economic": "Important aquaculture species",
+            "conservation": "Least Concern"
+        },
+        {
+            "name": "Koi",
+            "scientific": "Cyprinus carpio",
+            "family": "Cyprinidae",
+            "size": "40 cm (1.3 ft)",
+            "weight": "Up to 3 kg",
+            "habitat": "Ponds, lakes, slow-moving rivers",
+            "diet": "Omnivorous - plants, insects, crustaceans",
+            "features": "Vibrant orange, white, black patterns",
+            "behavior": "Social, peaceful, ornamental",
+            "economic": "High ornamental value",
+            "conservation": "Least Concern (domesticated)"
+        },
+        {
+            "name": "Magur",
+            "scientific": "Clarias batrachus",
+            "family": "Clariidae",
+            "size": "30 cm (1 ft)",
+            "weight": "Up to 1 kg",
+            "habitat": "Swamps, canals, rice fields",
+            "diet": "Carnivorous - insects, worms, small fish",
+            "features": "Air-breathing organ, dark brown body",
+            "behavior": "Can survive out of water, hardy",
+            "economic": "Important food fish",
+            "conservation": "Least Concern"
+        },
+        {
+            "name": "Pabda",
+            "scientific": "Ompok pabda",
+            "family": "Siluridae",
+            "size": "25 cm (10 in)",
+            "weight": "Up to 0.5 kg",
+            "habitat": "Rivers and streams",
+            "diet": "Carnivorous - small fish, insects",
+            "features": "Elongated body, small scales",
+            "behavior": "Nocturnal, bottom dweller",
+            "economic": "Highly prized for taste",
+            "conservation": "Near Threatened"
+        },
+        {
+            "name": "Pangas",
+            "scientific": "Pangasius pangasius",
+            "family": "Pangasiidae",
+            "size": "90 cm (3 ft)",
+            "weight": "Up to 10 kg",
+            "habitat": "Large rivers, estuaries",
+            "diet": "Omnivorous - plants, fruits, small animals",
+            "features": "Silver body, long barbels",
+            "behavior": "Schooling fish, migratory",
+            "economic": "Major commercial species",
+            "conservation": "Least Concern"
+        },
+        {
+            "name": "Rui",
+            "scientific": "Labeo rohita",
+            "family": "Cyprinidae",
+            "size": "80 cm (2.6 ft)",
+            "weight": "Up to 8 kg",
+            "habitat": "Rivers and ponds",
+            "diet": "Herbivorous - plants and algae",
+            "features": "Bluish body, reddish fins",
+            "behavior": "Surface and mid-water feeder",
+            "economic": "Most important carp species",
+            "conservation": "Least Concern"
+        },
+        {
+            "name": "Shing",
+            "scientific": "Heteropneustes fossilis",
+            "family": "Heteropneustidae",
+            "size": "25 cm (10 in)",
+            "weight": "Up to 0.3 kg",
+            "habitat": "Swamps, stagnant waters",
+            "diet": "Carnivorous - insects, worms",
+            "features": "Venomous spines, air-breathing",
+            "behavior": "Lives in muddy waters, hardy",
+            "economic": "Medicinal value, food fish",
+            "conservation": "Least Concern"
+        },
+        {
+            "name": "Telapiya",
+            "scientific": "Oreochromis niloticus",
+            "family": "Cichlidae",
+            "size": "35 cm (1.1 ft)",
+            "weight": "Up to 2 kg",
+            "habitat": "Lakes, ponds, rivers",
+            "diet": "Omnivorous - plants, plankton, insects",
+            "features": "Vertical stripes, reddish fins",
+            "behavior": "Fast reproducing, aggressive",
+            "economic": "Globally farmed",
+            "conservation": "Least Concern (invasive)"
+        },
+        {
+            "name": "Tengra",
+            "scientific": "Mystus tengara",
+            "family": "Bagridae",
+            "size": "15 cm (6 in)",
+            "weight": "Up to 0.1 kg",
+            "habitat": "Rivers and streams",
+            "diet": "Carnivorous - small fish, insects",
+            "features": "Long barbels, striped body",
+            "behavior": "Small catfish, schooling",
+            "economic": "Local fisheries, aquarium trade",
+            "conservation": "Least Concern"
+        }
+    ]
+    
+    for sp in freshwater_species:
+        st.markdown(f"""
+        <div class="species-card">
+            <div class="species-name">🐟 {sp['name']}</div>
+            <div class="species-scientific"><i>{sp['scientific']}</i> | {sp['family']}</div>
+            <div class="species-detail"><span class="badge">📏 Size</span> {sp['size']} | <span class="badge">⚖️ Weight</span> {sp['weight']}</div>
+            <div class="species-detail"><span class="badge">🌊 Habitat</span> {sp['habitat']}</div>
+            <div class="species-detail"><span class="badge">🍽️ Diet</span> {sp['diet']}</div>
+            <div class="species-detail"><span class="badge">🔬 Features</span> {sp['features']}</div>
+            <div class="species-detail"><span class="badge">🔄 Behavior</span> {sp['behavior']}</div>
+            <div class="species-detail"><span class="badge">💰 Economic Value</span> {sp['economic']}</div>
+            <div class="species-detail"><span class="badge">🌍 Conservation</span> {sp['conservation']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ============================================
+# ADDITIONAL INFORMATION SECTION
+# ============================================
+
+st.markdown("---")
+st.markdown("## 🔬 Research & Conservation Notes")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("""
+    <div class="info-card">
+        <h4>📊 Model Performance Summary</h4>
+        <p><strong>🏆 Best Model:</strong> Hybrid CART-SVM (95.2% Accuracy)</p>
+        <p><strong>📈 Improvement:</strong> +12.9% over Decision Tree, +4.4% over SVM</p>
+        <p><strong>🔬 Cross-Validation:</strong> 5-fold CV F1-Score: 0.942 ± 0.008</p>
+        <p><strong>🎯 CNN (Freshwater):</strong> 91.8% Accuracy, 96.5% Top-3 Accuracy</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div class="info-card">
+        <h4>🌊 Research Impact</h4>
+        <p><strong>Ecological Importance:</strong> Automated identification helps monitor fish populations and biodiversity.</p>
+        <p><strong>Conservation Value:</strong> Quick species recognition supports fisheries management and conservation planning.</p>
+        <p><strong>Future Work:</strong> Expand CNN to more species, real-time video classification, mobile app integration.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Footer
+st.markdown("""
+<div class="footer">
+    <p>🎓 <strong>Final Year Project</strong> | Hybrid CART-SVM (95.2%) | CNN MobileNetV2 (91.8%)</p>
+    <p>🚀 12.9% Improvement over Decision Tree | 5-Fold Cross-Validated | 10 Freshwater Species</p>
+    <p>📊 Data sources: FishBase, IUCN Red List, FAO Fisheries | Model Performance on Test Set</p>
+</div>
+""", unsafe_allow_html=True)
