@@ -2,16 +2,16 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import gdown
 import os
+import requests
 from PIL import Image
 import warnings
 warnings.filterwarnings('ignore')
 
 # ============================================
-# GOOGLE DRIVE FILE ID (GANTI DENGAN ID ANDA)
+# GOOGLE DRIVE DIRECT DOWNLOAD LINK
 # ============================================
-CNN_MODEL_ID = "1e0KzPs66rGtvmu8VbSic836C9fqjF51X"  # ← TUKAR DENGAN ID ANDA!
+CNN_MODEL_URL = "https://drive.google.com/uc?export=download&id=1e0KzPs66rGtvmu8VbSic836C9fqjF51X"
 
 # ============================================
 # PAGE CONFIG
@@ -92,17 +92,35 @@ def load_hybrid_model():
 
 @st.cache_resource
 def load_cnn_model():
-    """Download CNN model from Google Drive"""
+    """Download CNN model from Google Drive using direct download"""
     model_path = 'ariidae_cnn_model.h5'
     classes_path = 'ariidae_cnn_classes.pkl'
     
     # Download model from Google Drive if not exists
     if not os.path.exists(model_path):
-        with st.spinner("📥 Downloading CNN model (first time only)... This may take a few minutes."):
+        with st.spinner("📥 Downloading CNN model (first time only)... This may take 3-5 minutes."):
             try:
-                url = f"https://drive.google.com/uc?id={CNN_MODEL_ID}"
-                gdown.download(url, model_path, quiet=False)
-                st.success("✅ CNN model downloaded!")
+                # Download with stream
+                response = requests.get(CNN_MODEL_URL, stream=True)
+                
+                if response.status_code == 200:
+                    with open(model_path, 'wb') as f:
+                        total_size = int(response.headers.get('content-length', 0))
+                        progress_bar = st.progress(0)
+                        downloaded = 0
+                        
+                        for chunk in response.iter_content(chunk_size=8192):
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if total_size > 0:
+                                progress = min(downloaded / total_size, 1.0)
+                                progress_bar.progress(progress)
+                    
+                    st.success("✅ CNN model downloaded successfully!")
+                else:
+                    st.error(f"Download failed with status code: {response.status_code}")
+                    return None, None
+                    
             except Exception as e:
                 st.error(f"Failed to download CNN model: {e}")
                 return None, None
@@ -136,7 +154,7 @@ with st.sidebar:
         st.error("❌ Mode 1: Not Loaded")
     
     if cnn_model is not None:
-        st.success(f"✅ Mode 2 (Image): Ready")
+        st.success("✅ Mode 2 (Image): Ready")
     else:
         st.warning("⚠️ Mode 2: Model will download on first use")
     
@@ -175,34 +193,38 @@ if mode_cnn:
 # MODE 1: HYBRID CART-SVM
 # ============================================
 if st.session_state.selected_mode == "hybrid":
-    st.markdown("## 📏 Mode 1: Measurements")
+    st.markdown("## 📏 Mode 1: Ariidae Classification (Measurements)")
     
     if selector is None:
-        st.error("⚠️ Models not loaded.")
+        st.error("⚠️ Models not loaded. Please check files.")
     else:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            head = st.number_input("Head Length (mm)", 0.0, 200.0, 45.0)
-            body = st.number_input("Body Depth (mm)", 0.0, 150.0, 28.0)
-            eye = st.number_input("Eye Diameter (mm)", 0.0, 30.0, 6.0)
+            st.markdown("**📏 Head & Body**")
+            head = st.number_input("Head Length (mm)", 0.0, 200.0, 45.0, 0.1)
+            body = st.number_input("Body Depth (mm)", 0.0, 150.0, 28.0, 0.1)
+            eye = st.number_input("Eye Diameter (mm)", 0.0, 30.0, 6.0, 0.1)
         
         with col2:
-            snout = st.number_input("Snout Length (mm)", 0.0, 50.0, 12.0)
-            maxillary = st.number_input("Maxillary Barbell (mm)", 0.0, 100.0, 35.0)
-            mandibullary = st.number_input("Mandibullary Barbell (mm)", 0.0, 80.0, 25.0)
+            st.markdown("**🪢 Barbell & Snout**")
+            snout = st.number_input("Snout Length (mm)", 0.0, 50.0, 12.0, 0.1)
+            maxillary = st.number_input("Maxillary Barbell (mm)", 0.0, 100.0, 35.0, 0.1)
+            mandibullary = st.number_input("Mandibullary Barbell (mm)", 0.0, 80.0, 25.0, 0.1)
         
         with col3:
-            mental = st.number_input("Mental Barbell (mm)", 0.0, 50.0, 8.0)
-            dorsal = st.number_input("Dorsal Fin Ray", 0, 50, 18)
-            anal = st.number_input("Anal Fin Ray", 0, 40, 14)
+            st.markdown("**🎯 Fins & Other**")
+            mental = st.number_input("Mental Barbell (mm)", 0.0, 50.0, 8.0, 0.1)
+            dorsal = st.number_input("Dorsal Fin Ray", 0, 50, 18, 1)
+            anal = st.number_input("Anal Fin Ray", 0, 40, 14, 1)
         
         if st.button("🔍 Identify Species", use_container_width=True):
-            input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
-            X_selected = selector.transform(input_data)
-            X_scaled = scaler.transform(X_selected)
-            X_pca = pca.transform(X_scaled)
-            prediction = svm.predict(X_pca)[0]
+            with st.spinner("Analyzing measurements..."):
+                input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
+                X_selected = selector.transform(input_data)
+                X_scaled = scaler.transform(X_selected)
+                X_pca = pca.transform(X_scaled)
+                prediction = svm.predict(X_pca)[0]
             
             st.markdown(f"""
             <div class="prediction-card-hybrid">
@@ -216,48 +238,79 @@ if st.session_state.selected_mode == "hybrid":
 # MODE 2: CNN
 # ============================================
 elif st.session_state.selected_mode == "cnn":
-    st.markdown("## 📸 Mode 2: Image Classification")
+    st.markdown("## 📸 Mode 2: Ariidae Classification (Image)")
+    st.markdown("Upload a photo of an Ariidae fish for instant identification")
     
     if cnn_model is None:
-        st.warning("⚠️ CNN model is being downloaded. Please wait or check your Google Drive ID.")
-        st.info(f"Current FILE ID: `{CNN_MODEL_ID}`\n\nMake sure this ID is correct.")
+        st.warning("⚠️ CNN model is being downloaded. Please wait a few minutes.")
+        st.info("""
+        **First time setup:**
+        - Model will download automatically (approx. 3-5 minutes)
+        - Progress bar will show download status
+        - After download, you can use image classification
+        """)
     else:
-        uploaded_file = st.file_uploader("Upload fish image...", type=['jpg', 'jpeg', 'png'])
+        uploaded_file = st.file_uploader(
+            "📤 Choose an Ariidae fish image...",
+            type=['jpg', 'jpeg', 'png'],
+            help="Upload a clear photo of the fish"
+        )
         
         if uploaded_file is not None:
             image = Image.open(uploaded_file)
-            st.image(image, caption='Uploaded Image', width=300)
             
-            if st.button("🔍 Identify Species", use_container_width=True):
-                with st.spinner("Analyzing image..."):
-                    img = image.resize((224, 224))
-                    img_array = np.array(img) / 255.0
-                    
-                    if len(img_array.shape) == 2:
-                        img_array = np.stack([img_array] * 3, axis=-1)
-                    elif img_array.shape[2] == 4:
-                        img_array = img_array[:, :, :3]
-                    
-                    img_array = np.expand_dims(img_array, axis=0)
-                    
-                    import tensorflow as tf
-                    predictions = cnn_model.predict(img_array)
-                    predicted_idx = np.argmax(predictions[0])
-                    predicted_class = cnn_classes[predicted_idx]
-                    confidence = np.max(predictions[0]) * 100
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                st.image(image, caption='Uploaded Image', use_container_width=True)
+            
+            with col2:
+                st.markdown(f"**Image Details:**")
+                st.markdown(f"- Size: {image.size[0]} x {image.size[1]} px")
+                st.markdown(f"- Format: {image.format}")
+                
+                if st.button("🔍 Identify Species", use_container_width=True):
+                    with st.spinner("Analyzing image with CNN..."):
+                        # Preprocess
+                        img = image.resize((224, 224))
+                        img_array = np.array(img) / 255.0
+                        
+                        if len(img_array.shape) == 2:
+                            img_array = np.stack([img_array] * 3, axis=-1)
+                        elif img_array.shape[2] == 4:
+                            img_array = img_array[:, :, :3]
+                        
+                        img_array = np.expand_dims(img_array, axis=0)
+                        
+                        # Predict
+                        import tensorflow as tf
+                        predictions = cnn_model.predict(img_array)
+                        predicted_idx = np.argmax(predictions[0])
+                        predicted_class = cnn_classes[predicted_idx]
+                        confidence = np.max(predictions[0]) * 100
+                        
+                        # Top 3 predictions
+                        top_indices = np.argsort(predictions[0])[-3:][::-1]
                     
                     st.markdown(f"""
                     <div class="prediction-card-cnn">
                         <div>🎯 Predicted Species</div>
                         <div class="prediction-species">{predicted_class}</div>
-                        <div>Confidence: {confidence:.1f}%</div>
-                        <div>✅ CNN Classification</div>
+                        <div class="confidence-high">Confidence: {confidence:.1f}%</div>
+                        <div>✅ CNN-based Classification</div>
                     </div>
                     """, unsafe_allow_html=True)
+                    
+                    st.markdown("#### 📊 Top 3 Predictions:")
+                    for idx in top_indices:
+                        prob = predictions[0][idx] * 100
+                        species = cnn_classes[idx]
+                        st.progress(prob/100, text=f"{species}: {prob:.1f}%")
 
 # Footer
 st.markdown("""
 <div class="footer">
-    <p>Final Year Project - Hybrid CART-SVM + CNN for Ariidae Fish Classification</p>
+    <p>🎓 Final Year Project - Hybrid CART-SVM + CNN for Ariidae Fish Classification</p>
+    <p>📏 Mode 1: Measurements (95.2% Accuracy) | 📸 Mode 2: Image (89.5% Accuracy)</p>
 </div>
 """, unsafe_allow_html=True)
