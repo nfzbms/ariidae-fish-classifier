@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 # ============================================
 # GOOGLE DRIVE FILE ID (GANTI DENGAN ID ANDA)
 # ============================================
-CNN_MODEL_ID = "1ABC123xyz789"  # ← TUKAR DENGAN ID ANDA!
+CNN_MODEL_ID = "1e0KzPs66rGtvmu8VbSic836C9fqjF51X"  # ← TUKAR DENGAN ID ANDA!
 
 # ============================================
 # PAGE CONFIG
