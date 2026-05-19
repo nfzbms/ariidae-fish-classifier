@@ -5,5 +5,6 @@ scikit-learn
 joblib
 tensorflow
 pillow
-gdown
+requests
 h5py
+matplotlib
