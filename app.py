@@ -58,18 +58,26 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Load real model
+# ============================================
+# LOAD MODELS
+# ============================================
+
 @st.cache_resource
 def load_real_model():
-    selector = joblib.load('feature_selector.pkl')
-    scaler = joblib.load('scaler.pkl')
-    pca = joblib.load('pca.pkl')
-    svm = joblib.load('svm_model.pkl')
-    features = joblib.load('selected_cols.pkl')
-    classes = joblib.load('classes.pkl')
-    return selector, scaler, pca, svm, features, classes
+    try:
+        selector = joblib.load('feature_selector.pkl')
+        scaler = joblib.load('scaler.pkl')
+        pca = joblib.load('pca.pkl')
+        svm = joblib.load('svm_model.pkl')
+        features = joblib.load('selected_cols.pkl')
+        classes = joblib.load('classes.pkl')
+        
+        st.success(f"✅ Model loaded with {len(features)} features")
+        return selector, scaler, pca, svm, features, classes
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+        return None, None, None, None, None, None
 
-# Load simulated model (Random Forest)
 @st.cache_resource
 def load_sim_model():
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -79,10 +87,14 @@ def load_sim_model():
     rf.fit(dummy_X, dummy_y)
     return rf, ['Arius maculatus', 'Arius thalassinus', 'Arius venosus']
 
+# Load models
 selector, scaler, pca, svm, features, classes = load_real_model()
 sim_model, sim_classes = load_sim_model()
 
-# Mode selection
+# ============================================
+# MODE SELECTION
+# ============================================
+
 st.markdown("## 🎯 Select Classification Mode")
 col1, col2 = st.columns(2)
 
@@ -104,37 +116,49 @@ if mode_sim:
 if st.session_state.selected_mode == "real":
     st.markdown("## 📏 Enter Fish Measurements")
     
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        head = st.number_input("Head Length (mm)", 0.0, 200.0, 45.0)
-        body = st.number_input("Body Depth (mm)", 0.0, 150.0, 28.0)
-        eye = st.number_input("Eye Diameter (mm)", 0.0, 30.0, 6.0)
-    
-    with col2:
-        snout = st.number_input("Snout Length (mm)", 0.0, 50.0, 12.0)
-        maxillary = st.number_input("Maxillary Barbell (mm)", 0.0, 100.0, 35.0)
-        mandibullary = st.number_input("Mandibullary Barbell (mm)", 0.0, 80.0, 25.0)
-    
-    with col3:
-        mental = st.number_input("Mental Barbell (mm)", 0.0, 50.0, 8.0)
-        dorsal = st.number_input("Dorsal Fin Ray", 0, 50, 18)
-        anal = st.number_input("Anal Fin Ray", 0, 40, 14)
-    
-    if st.button("🔍 Identify Species", use_container_width=True):
-        input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
-        X_selected = selector.transform(input_data)
-        X_scaled = scaler.transform(X_selected)
-        X_pca = pca.transform(X_scaled)
-        prediction = svm.predict(X_pca)[0]
+    if selector is None:
+        st.error("⚠️ Model not loaded. Please check files.")
+    else:
+        col1, col2, col3 = st.columns(3)
         
-        st.markdown(f"""
-        <div class="prediction-card-real">
-            <div>🎯 Predicted Species</div>
-            <div class="prediction-species">{prediction}</div>
-            <div>✅ Hybrid CART-SVM | 95.2% Accuracy</div>
-        </div>
-        """, unsafe_allow_html=True)
+        with col1:
+            head = st.number_input("Head Length (mm)", 0.0, 200.0, 45.0, 0.1)
+            body = st.number_input("Body Depth (mm)", 0.0, 150.0, 28.0, 0.1)
+            eye = st.number_input("Eye Diameter (mm)", 0.0, 30.0, 6.0, 0.1)
+        
+        with col2:
+            snout = st.number_input("Snout Length (mm)", 0.0, 50.0, 12.0, 0.1)
+            maxillary = st.number_input("Maxillary Barbell (mm)", 0.0, 100.0, 35.0, 0.1)
+            mandibullary = st.number_input("Mandibullary Barbell (mm)", 0.0, 80.0, 25.0, 0.1)
+        
+        with col3:
+            mental = st.number_input("Mental Barbell (mm)", 0.0, 50.0, 8.0, 0.1)
+            dorsal = st.number_input("Dorsal Fin Ray", 0, 50, 18, 1)
+            anal = st.number_input("Anal Fin Ray", 0, 40, 14, 1)
+        
+        if st.button("🔍 Identify Species", use_container_width=True):
+            try:
+                # Create input array with 9 features
+                input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
+                
+                # Check shape
+                st.write(f"Input shape: {input_data.shape}")
+                
+                # Transform
+                X_selected = selector.transform(input_data)
+                X_scaled = scaler.transform(X_selected)
+                X_pca = pca.transform(X_scaled)
+                prediction = svm.predict(X_pca)[0]
+                
+                st.markdown(f"""
+                <div class="prediction-card-real">
+                    <div>🎯 Predicted Species</div>
+                    <div class="prediction-species">{prediction}</div>
+                    <div>✅ Hybrid CART-SVM | 95.2% Accuracy</div>
+                </div>
+                """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Prediction error: {e}")
 
 # ============================================
 # MODE 2: SIMULATED DATA
@@ -144,11 +168,17 @@ else:
     st.markdown("Click the button below to generate simulated fish data")
     
     if st.button("🎲 Generate Simulated Data", use_container_width=True):
-        # Generate random values
+        # Generate random values for 9 features
         values = [
-            random.uniform(30, 70), random.uniform(20, 50), random.uniform(4, 10),
-            random.uniform(8, 20), random.uniform(20, 50), random.uniform(15, 40),
-            random.uniform(5, 15), random.randint(15, 25), random.randint(10, 20)
+            random.uniform(30, 70),  # Head
+            random.uniform(20, 50),  # Body
+            random.uniform(4, 10),   # Eye
+            random.uniform(8, 20),   # Snout
+            random.uniform(20, 50),  # Maxillary
+            random.uniform(15, 40),  # Mandibullary
+            random.uniform(5, 15),   # Mental
+            random.randint(15, 25),  # Dorsal
+            random.randint(10, 20)   # Anal
         ]
         
         input_data = np.array([values])
