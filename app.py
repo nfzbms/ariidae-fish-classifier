@@ -56,18 +56,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================
-# LOAD MODELS (SAMA DENGAN CODE TRAINING ANDA)
+# LOAD MODELS
 # ============================================
 
 @st.cache_resource
 def load_real_model():
-    """Load real data models from training"""
     try:
         scaler = joblib.load('scaler_real.pkl')
         pca = joblib.load('pca_real.pkl')
         svm = joblib.load('svm_real_model.pkl')
         features = joblib.load('real_features.pkl')
         classes = joblib.load('real_classes.pkl')
+        
+        # Display feature info
+        st.sidebar.success(f"Real Model: {len(features)} features")
+        st.sidebar.info(f"Features: {', '.join(features)}")
+        
         return scaler, pca, svm, features, classes
     except Exception as e:
         st.error(f"Error loading real model: {e}")
@@ -75,7 +79,6 @@ def load_real_model():
 
 @st.cache_resource
 def load_sim_model():
-    """Load simulated data models from training"""
     try:
         scaler = joblib.load('scaler_sim.pkl')
         rf = joblib.load('sim_model.pkl')
@@ -89,14 +92,6 @@ def load_sim_model():
 # Load models
 real_scaler, real_pca, real_svm, real_features, real_classes = load_real_model()
 sim_scaler, sim_rf, sim_features, sim_classes = load_sim_model()
-
-# Show feature info in sidebar
-with st.sidebar:
-    st.header("📊 Model Info")
-    if real_features:
-        st.info(f"Real Model: {len(real_features)} features selected by DT")
-    if sim_features:
-        st.info(f"Sim Model: {len(sim_features)} features")
 
 # ============================================
 # MODE SELECTION
@@ -118,20 +113,16 @@ if mode_sim:
     st.session_state.selected_mode = "sim"
 
 # ============================================
-# MODE 1: REAL DATA (Hybrid CART-SVM)
+# MODE 1: REAL DATA
 # ============================================
 if st.session_state.selected_mode == "real":
     st.markdown("## 📏 Real Data Mode")
-    st.markdown("Enter the morphological measurements below")
     
     if real_scaler is None:
         st.error("⚠️ Real data model not loaded.")
     else:
         # Show which features are required
-        st.info(f"This model uses {len(real_features)} features: {', '.join(real_features)}")
-        
-        # Create input fields based on the features from training
-        input_values = {}
+        st.info(f"This model requires {len(real_features)} feature(s): {', '.join(real_features)}")
         
         # Map feature names to display names
         display_names = {
@@ -146,29 +137,58 @@ if st.session_state.selected_mode == "real":
             'Anal_fin_ray': 'Anal Fin Ray'
         }
         
-        # Create columns for input
-        col1, col2, col3 = st.columns(3)
+        # Create input fields based on ACTUAL features from training
+        input_values = {}
         
-        for i, feature in enumerate(real_features):
-            display = display_names.get(feature, feature.replace('_', ' ').title())
-            
-            if i < 3:
-                with col1:
-                    input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
-            elif i < 6:
-                with col2:
-                    input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
-            else:
-                with col3:
-                    input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+        # Determine how many columns needed
+        num_features = len(real_features)
+        
+        if num_features <= 3:
+            col1, col2, col3 = st.columns(3)
+            for i, feature in enumerate(real_features):
+                display = display_names.get(feature, feature.replace('_', ' ').title())
+                if i == 0:
+                    with col1:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+                elif i == 1:
+                    with col2:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+                else:
+                    with col3:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+        elif num_features <= 6:
+            col1, col2 = st.columns(2)
+            for i, feature in enumerate(real_features):
+                display = display_names.get(feature, feature.replace('_', ' ').title())
+                if i < 3:
+                    with col1:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+                else:
+                    with col2:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+        else:
+            col1, col2, col3 = st.columns(3)
+            for i, feature in enumerate(real_features):
+                display = display_names.get(feature, feature.replace('_', ' ').title())
+                if i < 3:
+                    with col1:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+                elif i < 6:
+                    with col2:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+                else:
+                    with col3:
+                        input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
         
         if st.button("🔍 Identify Species", use_container_width=True):
             try:
-                # Create input array in the correct order (same as training)
+                # Create input array in the correct order (matching training)
                 input_list = [input_values[feature] for feature in real_features]
                 input_data = np.array([input_list])
                 
-                # Apply same transformations as training
+                st.write(f"Input shape: {input_data.shape} (should be (1, {len(real_features)}))")
+                
+                # Apply transformations
                 X_scaled = real_scaler.transform(input_data)
                 X_pca = real_pca.transform(X_scaled)
                 prediction = real_svm.predict(X_pca)[0]
@@ -177,26 +197,27 @@ if st.session_state.selected_mode == "real":
                 <div class="prediction-card-real">
                     <div>🎯 Predicted Species (Real Data)</div>
                     <div class="prediction-species">{prediction}</div>
-                    <div>✅ Hybrid CART-SVM | Feature Selection by DT</div>
+                    <div>✅ Hybrid CART-SVM | {len(real_features)} features selected by DT</div>
                 </div>
                 """, unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Prediction error: {e}")
+                st.info("Make sure you enter values for all required features.")
 
 # ============================================
-# MODE 2: SIMULATED DATA (Random Forest)
+# MODE 2: SIMULATED DATA
 # ============================================
 else:
     st.markdown("## 📈 Simulated Data Mode")
-    st.markdown("Enter the simulated fish measurements below")
     
     if sim_scaler is None:
         st.error("⚠️ Simulated data model not loaded.")
     else:
-        st.info(f"This model uses {len(sim_features)} features")
+        st.info(f"This model requires {len(sim_features)} feature(s)")
         
-        # Create input fields for simulated data
         input_values = {}
+        
+        # Create input fields based on simulated features
         col1, col2, col3 = st.columns(3)
         
         for i, feature in enumerate(sim_features):
@@ -227,7 +248,7 @@ else:
                     <div>🎯 Predicted Species (Simulated Data)</div>
                     <div class="prediction-species">{prediction}</div>
                     <div>Confidence: {confidence:.1f}%</div>
-                    <div>🌲 Random Forest | 81.2% Accuracy</div>
+                    <div>🌲 Random Forest | {len(sim_features)} features</div>
                 </div>
                 """, unsafe_allow_html=True)
             except Exception as e:
