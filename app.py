@@ -56,11 +56,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================
-# LOAD MODELS
+# LOAD MODELS (SAMA DENGAN CODE TRAINING ANDA)
 # ============================================
 
 @st.cache_resource
 def load_real_model():
+    """Load real data models from training"""
     try:
         scaler = joblib.load('scaler_real.pkl')
         pca = joblib.load('pca_real.pkl')
@@ -74,6 +75,7 @@ def load_real_model():
 
 @st.cache_resource
 def load_sim_model():
+    """Load simulated data models from training"""
     try:
         scaler = joblib.load('scaler_sim.pkl')
         rf = joblib.load('sim_model.pkl')
@@ -88,6 +90,14 @@ def load_sim_model():
 real_scaler, real_pca, real_svm, real_features, real_classes = load_real_model()
 sim_scaler, sim_rf, sim_features, sim_classes = load_sim_model()
 
+# Show feature info in sidebar
+with st.sidebar:
+    st.header("📊 Model Info")
+    if real_features:
+        st.info(f"Real Model: {len(real_features)} features selected by DT")
+    if sim_features:
+        st.info(f"Sim Model: {len(sim_features)} features")
+
 # ============================================
 # MODE SELECTION
 # ============================================
@@ -96,9 +106,9 @@ st.markdown("## 🎯 Select Classification Mode")
 col1, col2 = st.columns(2)
 
 with col1:
-    mode_real = st.button("📏 Mode 1: Real Data\nActual fish measurements\n95.2% Accuracy", use_container_width=True, type="primary")
+    mode_real = st.button("📏 Mode 1: Real Data\nActual fish measurements\nHybrid CART-SVM", use_container_width=True, type="primary")
 with col2:
-    mode_sim = st.button("📈 Mode 2: Simulated Data\nFrom simulated Excel data\n81.2% Accuracy", use_container_width=True)
+    mode_sim = st.button("📈 Mode 2: Simulated Data\nFrom simulated Excel data\nRandom Forest", use_container_width=True)
 
 if 'selected_mode' not in st.session_state:
     st.session_state.selected_mode = "real"
@@ -108,93 +118,124 @@ if mode_sim:
     st.session_state.selected_mode = "sim"
 
 # ============================================
-# MODE 1: REAL DATA
+# MODE 1: REAL DATA (Hybrid CART-SVM)
 # ============================================
 if st.session_state.selected_mode == "real":
     st.markdown("## 📏 Real Data Mode")
-    st.markdown("Enter actual morphological measurements of Ariidae fish")
+    st.markdown("Enter the morphological measurements below")
     
     if real_scaler is None:
         st.error("⚠️ Real data model not loaded.")
     else:
+        # Show which features are required
+        st.info(f"This model uses {len(real_features)} features: {', '.join(real_features)}")
+        
+        # Create input fields based on the features from training
+        input_values = {}
+        
+        # Map feature names to display names
+        display_names = {
+            'Head_length': 'Head Length (mm)',
+            'Body_depth': 'Body Depth (mm)',
+            'Eye_diameter': 'Eye Diameter (mm)',
+            'Snout_length': 'Snout Length (mm)',
+            'Maxillary_barbell_length': 'Maxillary Barbell (mm)',
+            'Mandibullary_barbell_length': 'Mandibullary Barbell (mm)',
+            'Mental_barbell_length': 'Mental Barbell (mm)',
+            'Dorsal_fin_ray': 'Dorsal Fin Ray',
+            'Anal_fin_ray': 'Anal Fin Ray'
+        }
+        
+        # Create columns for input
         col1, col2, col3 = st.columns(3)
         
-        with col1:
-            head = st.number_input("Head Length (mm)", 0.0, 200.0, 45.0, 0.1)
-            body = st.number_input("Body Depth (mm)", 0.0, 150.0, 28.0, 0.1)
-            eye = st.number_input("Eye Diameter (mm)", 0.0, 30.0, 6.0, 0.1)
-        
-        with col2:
-            snout = st.number_input("Snout Length (mm)", 0.0, 50.0, 12.0, 0.1)
-            maxillary = st.number_input("Maxillary Barbell (mm)", 0.0, 100.0, 35.0, 0.1)
-            mandibullary = st.number_input("Mandibullary Barbell (mm)", 0.0, 80.0, 25.0, 0.1)
-        
-        with col3:
-            mental = st.number_input("Mental Barbell (mm)", 0.0, 50.0, 8.0, 0.1)
-            dorsal = st.number_input("Dorsal Fin Ray", 0, 50, 18, 1)
-            anal = st.number_input("Anal Fin Ray", 0, 40, 14, 1)
+        for i, feature in enumerate(real_features):
+            display = display_names.get(feature, feature.replace('_', ' ').title())
+            
+            if i < 3:
+                with col1:
+                    input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+            elif i < 6:
+                with col2:
+                    input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
+            else:
+                with col3:
+                    input_values[feature] = st.number_input(display, 0.0, 200.0, 45.0, 0.1)
         
         if st.button("🔍 Identify Species", use_container_width=True):
-            input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
-            X_scaled = real_scaler.transform(input_data)
-            X_pca = real_pca.transform(X_scaled)
-            prediction = real_svm.predict(X_pca)[0]
-            
-            st.markdown(f"""
-            <div class="prediction-card-real">
-                <div>🎯 Predicted Species (Real Data)</div>
-                <div class="prediction-species">{prediction}</div>
-                <div>✅ Hybrid CART-SVM | 95.2% Accuracy</div>
-            </div>
-            """, unsafe_allow_html=True)
+            try:
+                # Create input array in the correct order (same as training)
+                input_list = [input_values[feature] for feature in real_features]
+                input_data = np.array([input_list])
+                
+                # Apply same transformations as training
+                X_scaled = real_scaler.transform(input_data)
+                X_pca = real_pca.transform(X_scaled)
+                prediction = real_svm.predict(X_pca)[0]
+                
+                st.markdown(f"""
+                <div class="prediction-card-real">
+                    <div>🎯 Predicted Species (Real Data)</div>
+                    <div class="prediction-species">{prediction}</div>
+                    <div>✅ Hybrid CART-SVM | Feature Selection by DT</div>
+                </div>
+                """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Prediction error: {e}")
 
 # ============================================
-# MODE 2: SIMULATED DATA
+# MODE 2: SIMULATED DATA (Random Forest)
 # ============================================
 else:
     st.markdown("## 📈 Simulated Data Mode")
-    st.markdown("Enter simulated fish measurements (from your Excel data)")
+    st.markdown("Enter the simulated fish measurements below")
     
     if sim_scaler is None:
         st.error("⚠️ Simulated data model not loaded.")
     else:
+        st.info(f"This model uses {len(sim_features)} features")
+        
+        # Create input fields for simulated data
+        input_values = {}
         col1, col2, col3 = st.columns(3)
         
-        with col1:
-            head = st.number_input("Head Length (mm) - Sim", 0.0, 200.0, 45.0, 0.1)
-            body = st.number_input("Body Depth (mm) - Sim", 0.0, 150.0, 28.0, 0.1)
-            eye = st.number_input("Eye Diameter (mm) - Sim", 0.0, 30.0, 6.0, 0.1)
-        
-        with col2:
-            snout = st.number_input("Snout Length (mm) - Sim", 0.0, 50.0, 12.0, 0.1)
-            maxillary = st.number_input("Maxillary Barbell (mm) - Sim", 0.0, 100.0, 35.0, 0.1)
-            mandibullary = st.number_input("Mandibullary Barbell (mm) - Sim", 0.0, 80.0, 25.0, 0.1)
-        
-        with col3:
-            mental = st.number_input("Mental Barbell (mm) - Sim", 0.0, 50.0, 8.0, 0.1)
-            dorsal = st.number_input("Dorsal Fin Ray - Sim", 0, 50, 18, 1)
-            anal = st.number_input("Anal Fin Ray - Sim", 0, 40, 14, 1)
+        for i, feature in enumerate(sim_features):
+            display = feature.replace('_', ' ').title()
+            
+            if i < 3:
+                with col1:
+                    input_values[feature] = st.number_input(f"{display} (Sim)", 0.0, 200.0, 45.0, 0.1)
+            elif i < 6:
+                with col2:
+                    input_values[feature] = st.number_input(f"{display} (Sim)", 0.0, 200.0, 45.0, 0.1)
+            else:
+                with col3:
+                    input_values[feature] = st.number_input(f"{display} (Sim)", 0.0, 200.0, 45.0, 0.1)
         
         if st.button("🔍 Identify Species (Simulated)", use_container_width=True):
-            input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
-            X_scaled = sim_scaler.transform(input_data)
-            prediction = sim_rf.predict(X_scaled)[0]
-            proba = sim_rf.predict_proba(X_scaled)[0]
-            confidence = max(proba) * 100
-            
-            st.markdown(f"""
-            <div class="prediction-card-sim">
-                <div>🎯 Predicted Species (Simulated Data)</div>
-                <div class="prediction-species">{prediction}</div>
-                <div>Confidence: {confidence:.1f}%</div>
-                <div>🌲 Random Forest | 81.2% Accuracy</div>
-            </div>
-            """, unsafe_allow_html=True)
+            try:
+                input_list = [input_values[feature] for feature in sim_features]
+                input_data = np.array([input_list])
+                
+                X_scaled = sim_scaler.transform(input_data)
+                prediction = sim_rf.predict(X_scaled)[0]
+                proba = sim_rf.predict_proba(X_scaled)[0]
+                confidence = max(proba) * 100
+                
+                st.markdown(f"""
+                <div class="prediction-card-sim">
+                    <div>🎯 Predicted Species (Simulated Data)</div>
+                    <div class="prediction-species">{prediction}</div>
+                    <div>Confidence: {confidence:.1f}%</div>
+                    <div>🌲 Random Forest | 81.2% Accuracy</div>
+                </div>
+                """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Prediction error: {e}")
 
 # Footer
 st.markdown("""
 <div class="footer">
     <p>🎓 Final Year Project - Hybrid CART-SVM + Random Forest for Ariidae Fish Classification</p>
-    <p>📏 Mode 1: Real Data (95.2% Accuracy) | 📈 Mode 2: Simulated Data (81.2% Accuracy)</p>
 </div>
 """, unsafe_allow_html=True)
