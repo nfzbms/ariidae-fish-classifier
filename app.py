@@ -145,6 +145,16 @@ REAL_SPECIES_TRAINED = [
     "Osteogeneiosus militaris"
 ]
 
+# 6 Simulated species (for reference)
+SIMULATED_SPECIES = [
+    "Arius gagora",
+    "Arius leptonotacanthus",
+    "Arius oetik",
+    "Hexanematichthys sagor",
+    "Plicofollis argyropleuron",
+    "Plicofollis layardi"
+]
+
 # Complete 12 Ariidae Species Library
 ARIIDAE_SPECIES = {
     "Arius gagora": {
@@ -424,18 +434,24 @@ with tab1:
         """)
     
     with col2:
-        st.markdown("""
+        st.markdown(f"""
         ### 🐟 Species Training Status
         
-        | Species | Data Source |
-        |---------|-------------|
-        | Arius maculatus | ✅ Real Data |
-        | Arius venosus | ✅ Real Data |
-        | Cryptarius truncatus | ✅ Real Data |
-        | Nemapteryx macronotacantha | ✅ Real Data |
-        | Nemapteryx nenga | ✅ Real Data |
-        | Osteogeneiosus militaris | ✅ Real Data |
-        | Other 6 species | 📊 Simulated Data |
+        **✅ Real Data (6 species):**
+        - Arius maculatus
+        - Arius venosus
+        - Cryptarius truncatus
+        - Nemapteryx macronotacantha
+        - Nemapteryx nenga
+        - Osteogeneiosus militaris
+        
+        **📊 Simulated Data (6 species for reference):**
+        - Arius gagora
+        - Arius leptonotacanthus
+        - Arius oetik
+        - Hexanematichthys sagor
+        - Plicofollis argyropleuron
+        - Plicofollis layardi
         
         **Note:** Hybrid model achieves highest accuracy on 6 real-trained species.
         """)
@@ -723,8 +739,7 @@ with tab2:
             species_scores["Nemapteryx nenga"] = score
             
             # Osteogeneiosus militaris characteristics
-            score = 0
-            if 45 <= head_sim <= 65 and 30 <= body_sim <= 45 and eye_sim <= 7:
+            score = 0            if 45 <= head_sim <= 65 and 30 <= body_sim <= 45 and eye_sim <= 7:
                 score += 3
             if 35 <= maxillary_sim <= 50 and 25 <= mandibullary_sim <= 35:
                 score += 2
