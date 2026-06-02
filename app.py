@@ -886,26 +886,6 @@ with tab4:
     plt.tight_layout()
     st.pyplot(fig2)
     
-    # KNN Performance Details
-    st.markdown("### KNN Model Performance Details")
-    st.markdown("""
-    **K-Nearest Neighbors (KNN) Configuration:**
-    - k = 5 neighbors
-    - Distance metric: Euclidean
-    - Weights: Uniform
-    - Accuracy: **88.7%**
-    
-    **KNN Advantages:**
-    - Simple and intuitive algorithm
-    - No training phase, lazy learning
-    - Works well with small datasets
-    
-    **KNN Limitations:**
-    - Lower accuracy compared to Hybrid CART-SVM (-6.5%)
-    - Sensitive to irrelevant features
-    - Computationally expensive for large datasets
-    """)
-    
     # Real species performance
     st.markdown("### Performance on 6 Real-Trained Species")
     
