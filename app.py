@@ -534,7 +534,7 @@ with tab2:
                 dorsal = st.number_input("Dorsal Fin Ray", 0, 50, 18, 1)
                 anal = st.number_input("Anal Fin Ray", 0, 40, 14, 1)
             
-            if st.button("🔍 Identify Species", use_container_width=True, key="mode1_btn"):
+            if st.button("🔍 Identify Species", key="mode1_btn", use_container_width=True):
                 try:
                     input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
                     
@@ -591,16 +591,14 @@ with tab2:
                     st.error(f"Error: {e}")
     
     # ============================================
-    # MODE 2: SIMULATED DATA - SAME INPUT AS MODE 1
+    # MODE 2: SIMULATED DATA (SAME INPUT AS MODE 1)
     # ============================================
     with sub_tab2:
-        st.markdown("### Enter 9 Morphological Measurements (Simulated Data)")
+        st.markdown("### Simulated Data Classification (CART Model)")
         st.markdown("""
         <div class="info-box">
             <strong>ℹ️ About this mode:</strong> This CART model was developed using a <strong>simulated dataset covering all 12 Ariidae species</strong>.
             It serves as a comparison to demonstrate the superiority of real data with Hybrid CART-SVM.
-            <br><br>
-            <strong>📝 Note:</strong> Enter the <strong>same 9 morphological measurements</strong> as in Mode 1 for fair comparison.
         </div>
         """, unsafe_allow_html=True)
         
@@ -614,110 +612,51 @@ with tab2:
             
             with col1:
                 st.markdown("**📏 Head & Body**")
-                sim_head = st.number_input("Head Length (mm) - Sim", 0.0, 200.0, 45.0, 0.1, key="sim_head")
-                sim_body = st.number_input("Body Depth (mm) - Sim", 0.0, 150.0, 28.0, 0.1, key="sim_body")
-                sim_eye = st.number_input("Eye Diameter (mm) - Sim", 0.0, 30.0, 6.0, 0.1, key="sim_eye")
+                head_sim = st.number_input("Head Length (mm) [Sim]", 0.0, 200.0, 45.0, 0.1, key="head_sim")
+                body_sim = st.number_input("Body Depth (mm) [Sim]", 0.0, 150.0, 28.0, 0.1, key="body_sim")
+                eye_sim = st.number_input("Eye Diameter (mm) [Sim]", 0.0, 30.0, 6.0, 0.1, key="eye_sim")
             
             with col2:
                 st.markdown("**🪢 Barbell & Snout**")
-                sim_snout = st.number_input("Snout Length (mm) - Sim", 0.0, 50.0, 12.0, 0.1, key="sim_snout")
-                sim_maxillary = st.number_input("Maxillary Barbell (mm) - Sim", 0.0, 100.0, 35.0, 0.1, key="sim_maxillary")
-                sim_mandibullary = st.number_input("Mandibullary Barbell (mm) - Sim", 0.0, 80.0, 25.0, 0.1, key="sim_mandibullary")
+                snout_sim = st.number_input("Snout Length (mm) [Sim]", 0.0, 50.0, 12.0, 0.1, key="snout_sim")
+                maxillary_sim = st.number_input("Maxillary Barbell (mm) [Sim]", 0.0, 100.0, 35.0, 0.1, key="maxillary_sim")
+                mandibullary_sim = st.number_input("Mandibullary Barbell (mm) [Sim]", 0.0, 80.0, 25.0, 0.1, key="mandibullary_sim")
             
             with col3:
                 st.markdown("**🎯 Fins & Other**")
-                sim_mental = st.number_input("Mental Barbell (mm) - Sim", 0.0, 50.0, 8.0, 0.1, key="sim_mental")
-                sim_dorsal = st.number_input("Dorsal Fin Ray - Sim", 0, 50, 18, 1, key="sim_dorsal")
-                sim_anal = st.number_input("Anal Fin Ray - Sim", 0, 40, 14, 1, key="sim_anal")
+                mental_sim = st.number_input("Mental Barbell (mm) [Sim]", 0.0, 50.0, 8.0, 0.1, key="mental_sim")
+                dorsal_sim = st.number_input("Dorsal Fin Ray [Sim]", 0, 50, 18, 1, key="dorsal_sim")
+                anal_sim = st.number_input("Anal Fin Ray [Sim]", 0, 40, 14, 1, key="anal_sim")
             
-            # Compare button with Mode 1
-            col_btn1, col_btn2 = st.columns(2)
-            
-            with col_btn1:
-                if st.button("🔍 Identify Species (Simulated)", use_container_width=True, key="mode2_btn"):
-                    try:
-                        # Use the same feature names as loaded from model
-                        input_list = [sim_head, sim_body, sim_eye, sim_snout, sim_maxillary, 
-                                    sim_mandibullary, sim_mental, sim_dorsal, sim_anal]
-                        
-                        # If m2_features exists and has different order, map accordingly
-                        if m2_features is not None and len(m2_features) == 9:
-                            # Create dictionary mapping
-                            feature_map = {
-                                'head_length': sim_head,
-                                'body_depth': sim_body,
-                                'eye_diameter': sim_eye,
-                                'snout_length': sim_snout,
-                                'maxillary_barbell': sim_maxillary,
-                                'mandibullary_barbell': sim_mandibullary,
-                                'mental_barbell': sim_mental,
-                                'dorsal_fin_ray': sim_dorsal,
-                                'anal_fin_ray': sim_anal
-                            }
-                            input_list = [feature_map.get(f, 0) for f in m2_features]
-                        
-                        input_data = np.array([input_list])
-                        prediction = m2_cart.predict(input_data)[0]
-                        
-                        # Get species info
-                        species_info = ARIIDAE_SPECIES.get(prediction, {})
-                        
-                        st.markdown(f"""
-                        <div class="prediction-card-sim">
-                            <div>🎯 Predicted Species (Simulated Data)</div>
-                            <div class="prediction-species">{prediction}</div>
-                            <div>🌿 CART Model | 81.2% Accuracy</div>
-                            <div style="font-size: 0.9rem; margin-top: 10px;">⚠️ Simulated data model - Comparison purposes only</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Show species details
-                        if species_info:
-                            with st.expander("📖 View Species Information"):
-                                col_a, col_b = st.columns(2)
-                                with col_a:
-                                    st.markdown(f"**Scientific Name:** {species_info.get('scientific', 'N/A')}")
-                                    st.markdown(f"**Common Name:** {species_info.get('common', 'N/A')}")
-                                    st.markdown(f"**Size:** {species_info.get('size', 'N/A')}")
-                                    st.markdown(f"**Habitat:** {species_info.get('habitat', 'N/A')}")
-                                with col_b:
-                                    st.markdown(f"**Diet:** {species_info.get('diet', 'N/A')}")
-                                    st.markdown(f"**Features:** {species_info.get('features', 'N/A')}")
-                                    st.markdown(f"**Conservation:** {species_info.get('conservation', 'N/A')}")
-                                    st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
-                        
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-            
-            with col_btn2:
-                # Button to copy values from Mode 1
-                if st.button("📋 Copy Values from Mode 1", use_container_width=True):
-                    # This will trigger a rerun and populate the fields
-                    st.session_state['sim_head'] = head if 'head' in locals() else 45.0
-                    st.session_state['sim_body'] = body if 'body' in locals() else 28.0
-                    st.session_state['sim_eye'] = eye if 'eye' in locals() else 6.0
-                    st.session_state['sim_snout'] = snout if 'snout' in locals() else 12.0
-                    st.session_state['sim_maxillary'] = maxillary if 'maxillary' in locals() else 35.0
-                    st.session_state['sim_mandibullary'] = mandibullary if 'mandibullary' in locals() else 25.0
-                    st.session_state['sim_mental'] = mental if 'mental' in locals() else 8.0
-                    st.session_state['sim_dorsal'] = dorsal if 'dorsal' in locals() else 18
-                    st.session_state['sim_anal'] = anal if 'anal' in locals() else 14
-                    st.rerun()
-            
-            # Show comparison message
-            st.markdown("---")
-            st.markdown("### 🔬 Comparison Result")
-            st.success("""
-            💡 **Expected Outcome:** 
-            
-            When using the **same measurements**, the Hybrid CART-SVM (Mode 1) with real data will achieve **95.2% accuracy**, 
-            while the CART model on simulated data (Mode 2) achieves only **81.2% accuracy**.
-            
-            This **+14.0% improvement** proves that:
-            1. ✅ **Real morphological measurements** produce more accurate classifications
-            2. ✅ The **Hybrid CART-SVM approach** significantly outperforms standalone models
-            3. ✅ Training on **actual specimen data** is crucial for reliable species identification
-            """)
+            if st.button("🔍 Identify Species (Simulated)", key="mode2_btn", use_container_width=True):
+                try:
+                    # Create input array with SAME 9 features as Mode 1
+                    input_data_sim = np.array([[head_sim, body_sim, eye_sim, snout_sim, maxillary_sim, 
+                                                  mandibullary_sim, mental_sim, dorsal_sim, anal_sim]])
+                    
+                    prediction = m2_cart.predict(input_data_sim)[0]
+                    
+                    st.markdown(f"""
+                    <div class="prediction-card-sim">
+                        <div>🎯 Predicted Species (Simulated Data)</div>
+                        <div class="prediction-species">{prediction}</div>
+                        <div>🌿 CART Model | 81.2% Accuracy</div>
+                        <div style="font-size: 0.9rem; margin-top: 10px;">⚠️ Simulated data model - Comparison purposes only</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.success("""
+                    💡 **Conclusion:** Real data with Hybrid CART-SVM (Mode 1) achieves **95.2%** accuracy, 
+                    which is **+14.0%** higher than CART on simulated data. 
+                    
+                    This proves that:
+                    1. **Real morphological measurements** produce more accurate classifications
+                    2. The **Hybrid CART-SVM approach** significantly outperforms standalone models
+                    3. Training on **actual specimen data** is crucial for reliable species identification
+                    """)
+                    
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
 # ============================================
 # TAB 3: SPECIES LIBRARY
