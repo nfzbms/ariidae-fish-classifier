@@ -1,3 +1,4 @@
+
 # ============================================
 # FISH SPECIES CLASSIFIER APP
 # Hybrid CART-SVM Model Deployment
@@ -7,8 +8,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
-import plotly.express as px
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import seaborn as sns
 from PIL import Image
 import base64
 
@@ -24,7 +25,7 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         padding: 2rem;
         border-radius: 10px;
         color: white;
@@ -32,7 +33,7 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     .result-card {
-        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+        background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
         padding: 1.5rem;
         border-radius: 10px;
         text-align: center;
@@ -49,6 +50,13 @@ st.markdown("""
         margin-top: 3rem;
         padding: 1rem;
         background: #f0f2f6;
+        border-radius: 10px;
+    }
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 1.2rem;
+        padding: 0.5rem 2rem;
         border-radius: 10px;
     }
 </style>
@@ -98,10 +106,11 @@ def load_models():
             models['scaler_hybrid_sim'] = None
             models['pca_sim'] = None
             
+        st.success("✅ Models loaded successfully!")
         return models
     except Exception as e:
         st.error(f"Error loading models: {e}")
-        st.info("Please ensure all model files are in the same directory")
+        st.info("Please ensure all model files are in the same directory as this app")
         return None
 
 def predict_hybrid_real(features, models):
@@ -143,12 +152,29 @@ def predict_hybrid_sim(features, models):
         features_scaled = models['scaler_sim'].transform(features.reshape(1, -1))
         return models['hybrid_sim'].predict(features_scaled)[0]
 
+def plot_feature_bar(features, feature_names, title):
+    """Create bar chart using matplotlib"""
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bars = ax.bar(feature_names, features, color='steelblue', alpha=0.7)
+    ax.set_xlabel('Features')
+    ax.set_ylabel('Values (mm)')
+    ax.set_title(title)
+    ax.tick_params(axis='x', rotation=45)
+    
+    # Add value labels on bars
+    for bar, val in zip(bars, features):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
+                f'{val:.1f}', ha='center', va='bottom', fontsize=9)
+    
+    plt.tight_layout()
+    return fig
+
 # Header
 st.markdown("""
 <div class="main-header">
     <h1>🐟 Fish Species Classification System</h1>
     <p>Powered by Hybrid CART-SVM Machine Learning Model</p>
-    <p>FYP Project - Faculty of Computing</p>
+    <p>Final Year Project - Faculty of Computing</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -164,24 +190,29 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.markdown("### Model Information")
-    st.info("""
-    **Models Available:**
-    - 🌿 CART (Decision Tree)
-    - ⚡ SVM (Support Vector Machine)
-    - 📊 KNN (K-Nearest Neighbors)
-    - 🏆 Hybrid CART-SVM (Best)
-    """)
+    st.markdown("### 📊 Model Performance")
+    
+    if "Simulated" in mode:
+        st.markdown("**Mode 2: Simulated Data (12 Species)**")
+        st.metric("🏆 Best Model", "Hybrid CART-SVM", "95.4% Accuracy")
+        st.metric("🥈 Second Best", "KNN", "93.5% Accuracy")
+        st.metric("🥉 Third Best", "SVM", "92.6% Accuracy")
+    else:
+        st.markdown("**Mode 1: Real Data (6 Species)**")
+        st.metric("🏆 Best Model", "SVM", "88.5% Accuracy")
+        st.metric("🥈 Second Best", "KNN", "80.8% Accuracy")
+        st.metric("🥉 Third Best", "Hybrid", "80.8% Accuracy")
     
     st.markdown("---")
-    st.markdown("### Performance Metrics")
+    st.markdown("### ℹ️ About")
+    st.info("""
+    This system uses machine learning to classify fish species based on morphological features.
     
-    if "Real" in mode:
-        st.metric("Best Model Accuracy", "95.4%", "Hybrid CART-SVM")
-        st.metric("Dataset Size", "12 Species", "Simulated")
-    else:
-        st.metric("Best Model Accuracy", "88.5%", "Standalone SVM")
-        st.metric("Dataset Size", "6 Species", "Real")
+    **Features used:**
+    - Head measurements
+    - Barbell lengths
+    - Fin ray counts
+    """)
 
 # Load models
 models = load_models()
@@ -192,37 +223,37 @@ if models is None:
 # Main content
 if "Real" in mode:
     st.markdown("## 🌿 Real Data Mode (6 Fish Species)")
-    st.markdown("Classify fish species using morphological features")
+    st.markdown("Enter morphological features to classify among 6 fish species")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("### Head Features")
+        st.markdown("### 🐟 Head Features")
         head_length = st.number_input("Head Length (mm)", min_value=10.0, max_value=100.0, value=50.0, step=0.5)
         body_depth = st.number_input("Body Depth (mm)", min_value=10.0, max_value=100.0, value=40.0, step=0.5)
         eye_diameter = st.number_input("Eye Diameter (mm)", min_value=1.0, max_value=20.0, value=8.0, step=0.5)
         
     with col2:
-        st.markdown("### Snout & Barbell Features")
+        st.markdown("### 👃 Snout & Barbell")
         snout_length = st.number_input("Snout Length (mm)", min_value=5.0, max_value=50.0, value=20.0, step=0.5)
-        max_barbell = st.number_input("Maxillary Barbell Length (mm)", min_value=5.0, max_value=80.0, value=30.0, step=0.5)
-        mand_barbell = st.number_input("Mandibullary Barbell Length (mm)", min_value=5.0, max_value=80.0, value=28.0, step=0.5)
+        max_barbell = st.number_input("Maxillary Barbell (mm)", min_value=5.0, max_value=80.0, value=30.0, step=0.5)
+        mand_barbell = st.number_input("Mandibullary Barbell (mm)", min_value=5.0, max_value=80.0, value=28.0, step=0.5)
         
     with col3:
-        st.markdown("### Fin Features")
-        mental_barbell = st.number_input("Mental Barbell Length (mm)", min_value=5.0, max_value=80.0, value=25.0, step=0.5)
-        dorsal_fin = st.number_input("Dorsal Fin Ray Count", min_value=1, max_value=50, value=15, step=1)
-        anal_fin = st.number_input("Anal Fin Ray Count", min_value=1, max_value=50, value=12, step=1)
+        st.markdown("### 🎣 Fin Features")
+        mental_barbell = st.number_input("Mental Barbell (mm)", min_value=5.0, max_value=80.0, value=25.0, step=0.5)
+        dorsal_fin = st.number_input("Dorsal Fin Rays", min_value=1, max_value=50, value=15, step=1)
+        anal_fin = st.number_input("Anal Fin Rays", min_value=1, max_value=50, value=12, step=1)
     
     features = np.array([head_length, body_depth, eye_diameter, snout_length, 
                         max_barbell, mand_barbell, mental_barbell, dorsal_fin, anal_fin])
     
-    # Model selection for prediction
+    # Model selection
     st.markdown("---")
-    st.markdown("### Model Selection")
+    st.markdown("### 🤖 Select Model for Prediction")
     
     model_choice = st.selectbox(
-        "Choose model for prediction:",
+        "Choose model:",
         ["🏆 Hybrid CART-SVM (Recommended)", "⚡ SVM", "📊 KNN", "🌿 CART"]
     )
     
@@ -231,48 +262,44 @@ if "Real" in mode:
             if model_choice == "🏆 Hybrid CART-SVM (Recommended)":
                 prediction = predict_hybrid_real(features, models)
                 model_name = "Hybrid CART-SVM"
-                accuracy = 95.4
+                accuracy = 80.8
             elif model_choice == "⚡ SVM":
                 features_scaled = models['scaler_real'].transform(features.reshape(1, -1))
                 prediction = models['svm_real'].predict(features_scaled)[0]
                 model_name = "SVM"
-                accuracy = 92.6
+                accuracy = 88.5
             elif model_choice == "📊 KNN":
                 features_scaled = models['scaler_real'].transform(features.reshape(1, -1))
                 prediction = models['knn_real'].predict(features_scaled)[0]
                 model_name = "KNN"
-                accuracy = 93.5
+                accuracy = 80.8
             else:
                 prediction = models['cart_real'].predict(features.reshape(1, -1))[0]
                 model_name = "CART"
-                accuracy = 64.8
+                accuracy = 76.9
             
             # Display result
             st.markdown(f"""
             <div class="result-card">
-                <h2>🐟 Predicted Species: {prediction}</h2>
+                <h1>🐟 {prediction}</h1>
                 <h3>Model: {model_name}</h3>
-                <p>Model Accuracy: {accuracy}%</p>
+                <h4>Model Accuracy: {accuracy}%</h4>
             </div>
             """, unsafe_allow_html=True)
             
-            # Feature importance visualization
-            st.markdown("### Feature Values Used")
-            feature_df = pd.DataFrame({
-                'Feature': models['features_real'],
-                'Value': features
-            })
-            fig = px.bar(feature_df, x='Feature', y='Value', title='Input Features', color='Value')
-            st.plotly_chart(fig, use_container_width=True)
+            # Feature visualization
+            st.markdown("### 📊 Input Features Visualization")
+            fig = plot_feature_bar(features, models['features_real'], "Fish Morphological Features")
+            st.pyplot(fig)
 
 else:
-    st.markdown("## 📊 Simulated Data Mode (12 Species)")
-    st.markdown("Extended classification system with 12 fish species")
+    st.markdown("## 📊 Simulated Data Mode (12 Fish Species)")
+    st.markdown("Extended classification system with 12 fish species - **HYBRID MODEL ACHIEVES 95.4% ACCURACY**")
     
-    # Dynamic feature inputs based on simulated features
+    # Dynamic feature inputs
     sim_features = models['features_sim']
     
-    st.markdown("### Enter Morphological Features")
+    st.markdown("### 📏 Enter Morphological Features")
     
     cols = st.columns(3)
     feature_values = []
@@ -286,11 +313,11 @@ else:
     
     # Model selection
     st.markdown("---")
-    st.markdown("### Model Selection")
+    st.markdown("### 🤖 Select Model for Prediction")
     
     model_choice = st.selectbox(
-        "Choose model for prediction:",
-        ["🏆 Hybrid CART-SVM (Recommended - Best 95.4%)", "📊 KNN (93.5%)", "⚡ SVM (92.6%)", "🌿 CART (64.8%)"]
+        "Choose model:",
+        ["🏆 Hybrid CART-SVM (BEST: 95.4%)", "📊 KNN (93.5%)", "⚡ SVM (92.6%)", "🌿 CART (64.8%)"]
     )
     
     if st.button("🔍 Predict Species", type="primary", use_container_width=True):
@@ -299,37 +326,46 @@ else:
                 prediction = predict_hybrid_sim(features, models)
                 model_name = "Hybrid CART-SVM"
                 accuracy = 95.4
+                is_best = True
             elif "KNN" in model_choice:
                 features_scaled = models['scaler_sim'].transform(features.reshape(1, -1))
                 prediction = models['knn_sim'].predict(features_scaled)[0]
                 model_name = "KNN"
                 accuracy = 93.5
+                is_best = False
             elif "SVM" in model_choice:
                 features_scaled = models['scaler_sim'].transform(features.reshape(1, -1))
                 prediction = models['svm_sim'].predict(features_scaled)[0]
                 model_name = "SVM"
                 accuracy = 92.6
+                is_best = False
             else:
                 prediction = models['cart_sim'].predict(features.reshape(1, -1))[0]
                 model_name = "CART"
                 accuracy = 64.8
+                is_best = False
+            
+            # Display result
+            best_badge = "🏆 BEST MODEL (95.4% ACCURACY) 🏆" if is_best else ""
             
             st.markdown(f"""
             <div class="result-card">
-                <h2>🐟 Predicted Species: {prediction}</h2>
+                <h1>🐟 {prediction}</h1>
                 <h3>Model: {model_name}</h3>
-                <p>Model Accuracy: {accuracy}%</p>
-                <p>⭐ This is the BEST model with 95.4% accuracy!</p>
+                <h4>Model Accuracy: {accuracy}%</h4>
+                <h4>{best_badge}</h4>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Feature visualization
+            st.markdown("### 📊 Input Features Visualization")
+            fig = plot_feature_bar(features, sim_features, "Fish Morphological Features")
+            st.pyplot(fig)
 
 # Footer
 st.markdown("""
 <div class="footer">
-    <p>© 2024 Fish Species Classification System | FYP Project</p>
-    <p>Developed using Hybrid CART-SVM Machine Learning</p>
-    <p>📧 Contact: fyp@university.edu</p>
+    <p>© 2024 Fish Species Classification System | Final Year Project</p>
+    <p>Developed using Hybrid CART-SVM Machine Learning | Faculty of Computing</p>
 </div>
 """, unsafe_allow_html=True)
-
-# Run: streamlit run fish_classifier_app.py
