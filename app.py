@@ -596,205 +596,106 @@ with tab2:
                     st.error(f"Error: {e}")
     
     # ============================================
-    # MODE 2: SIMULATED DATA (FIXED PREDICTION)
+    # MODE 2: SIMULATED DATA (NOW USING HYBRID CART-SVM SAME AS MODE 1)
     # ============================================
     with sub_tab2:
-        st.markdown("### Simulated Data Classification (CART Model)")
+        st.markdown("### Simulated Data Classification (Hybrid CART-SVM Model)")
         st.markdown("""
         <div class="info-box">
-            <strong>ℹ️ About this mode:</strong> This CART model was developed using a <strong>simulated dataset covering all 12 Ariidae species</strong>.
-            It serves as a comparison to demonstrate the superiority of real data with Hybrid CART-SVM.
+            <strong>ℹ️ About this mode:</strong> This mode now uses the <strong>same Hybrid CART-SVM model</strong> as Mode 1, 
+            but applied to <strong>simulated data</strong> for comparison purposes.
+            It demonstrates the model's performance on synthetic data vs real morphological measurements.
         </div>
         """, unsafe_allow_html=True)
         
-        st.warning("⚠️ This mode uses CART model on simulated data for comparison (81.2% accuracy)")
+        st.warning("⚠️ This mode uses the Hybrid CART-SVM model on simulated data for comparison (95.2% accuracy potential)")
         
-        # SAME INPUT FIELDS AS MODE 1
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("**📏 Head & Body**")
-            head_sim = st.number_input("Head Length (mm)", 0.0, 200.0, 45.0, 0.1, key="head_sim_mode2")
-            body_sim = st.number_input("Body Depth (mm)", 0.0, 150.0, 28.0, 0.1, key="body_sim_mode2")
-            eye_sim = st.number_input("Eye Diameter (mm)", 0.0, 30.0, 6.0, 0.1, key="eye_sim_mode2")
-        
-        with col2:
-            st.markdown("**🪢 Barbell & Snout**")
-            snout_sim = st.number_input("Snout Length (mm)", 0.0, 50.0, 12.0, 0.1, key="snout_sim_mode2")
-            maxillary_sim = st.number_input("Maxillary Barbell (mm)", 0.0, 100.0, 35.0, 0.1, key="maxillary_sim_mode2")
-            mandibullary_sim = st.number_input("Mandibullary Barbell (mm)", 0.0, 80.0, 25.0, 0.1, key="mandibullary_sim_mode2")
-        
-        with col3:
-            st.markdown("**🎯 Fins & Other**")
-            mental_sim = st.number_input("Mental Barbell (mm)", 0.0, 50.0, 8.0, 0.1, key="mental_sim_mode2")
-            dorsal_sim = st.number_input("Dorsal Fin Ray", 0, 50, 18, 1, key="dorsal_sim_mode2")
-            anal_sim = st.number_input("Anal Fin Ray", 0, 40, 14, 1, key="anal_sim_mode2")
-        
-        if st.button("🔍 Identify Species (Simulated)", key="mode2_btn_fixed", use_container_width=True):
-            # Comprehensive rule-based prediction for simulated data
-            # Using multiple features to determine species
+        if m1_scaler is None:
+            st.error("⚠️ Models not loaded. Please check model files.")
+        else:
+            # SAME INPUT FIELDS AS MODE 1
+            col1, col2, col3 = st.columns(3)
             
-            # Calculate scores for each species based on input
-            species_scores = {}
+            with col1:
+                st.markdown("**📏 Head & Body**")
+                head_sim = st.number_input("Head Length (mm)", 0.0, 200.0, 45.0, 0.1, key="head_sim_mode2")
+                body_sim = st.number_input("Body Depth (mm)", 0.0, 150.0, 28.0, 0.1, key="body_sim_mode2")
+                eye_sim = st.number_input("Eye Diameter (mm)", 0.0, 30.0, 6.0, 0.1, key="eye_sim_mode2")
             
-            # Arius gagora characteristics
-            score = 0
-            if 40 <= head_sim <= 60 and 25 <= body_sim <= 35 and 5 <= eye_sim <= 8:
-                score += 3
-            if 30 <= maxillary_sim <= 45 and 20 <= mandibullary_sim <= 30:
-                score += 2
-            if 15 <= dorsal_sim <= 22 and 12 <= anal_sim <= 18:
-                score += 2
-            species_scores["Arius gagora"] = score
+            with col2:
+                st.markdown("**🪢 Barbell & Snout**")
+                snout_sim = st.number_input("Snout Length (mm)", 0.0, 50.0, 12.0, 0.1, key="snout_sim_mode2")
+                maxillary_sim = st.number_input("Maxillary Barbell (mm)", 0.0, 100.0, 35.0, 0.1, key="maxillary_sim_mode2")
+                mandibullary_sim = st.number_input("Mandibullary Barbell (mm)", 0.0, 80.0, 25.0, 0.1, key="mandibullary_sim_mode2")
             
-            # Arius leptonotacanthus characteristics
-            score = 0
-            if head_sim <= 50 and body_sim <= 30 and eye_sim <= 6:
-                score += 3
-            if maxillary_sim <= 35 and mandibullary_sim <= 25:
-                score += 2
-            if dorsal_sim <= 20 and anal_sim <= 15:
-                score += 2
-            species_scores["Arius leptonotacanthus"] = score
+            with col3:
+                st.markdown("**🎯 Fins & Other**")
+                mental_sim = st.number_input("Mental Barbell (mm)", 0.0, 50.0, 8.0, 0.1, key="mental_sim_mode2")
+                dorsal_sim = st.number_input("Dorsal Fin Ray", 0, 50, 18, 1, key="dorsal_sim_mode2")
+                anal_sim = st.number_input("Anal Fin Ray", 0, 40, 14, 1, key="anal_sim_mode2")
             
-            # Arius maculatus characteristics
-            score = 0
-            if 45 <= head_sim <= 70 and 30 <= body_sim <= 50 and eye_sim <= 7:
-                score += 3
-            if 35 <= maxillary_sim <= 55 and 25 <= mandibullary_sim <= 40:
-                score += 2
-            if 16 <= dorsal_sim <= 25 and 13 <= anal_sim <= 20:
-                score += 2
-            species_scores["Arius maculatus"] = score
-            
-            # Arius oetik characteristics
-            score = 0
-            if head_sim <= 45 and body_sim <= 25 and eye_sim <= 6:
-                score += 3
-            if maxillary_sim <= 30 and mandibullary_sim <= 20:
-                score += 2
-            if dorsal_sim <= 18 and anal_sim <= 14:
-                score += 2
-            species_scores["Arius oetik"] = score
-            
-            # Arius venosus characteristics
-            score = 0
-            if 40 <= head_sim <= 55 and 28 <= body_sim <= 40 and eye_sim <= 7:
-                score += 3
-            if 30 <= maxillary_sim <= 45 and 22 <= mandibullary_sim <= 32:
-                score += 2
-            if 15 <= dorsal_sim <= 22 and 12 <= anal_sim <= 18:
-                score += 2
-            species_scores["Arius venosus"] = score
-            
-            # Cryptarius truncatus characteristics
-            score = 0
-            if head_sim <= 40 and body_sim <= 30 and eye_sim >= 7:
-                score += 3
-            if maxillary_sim <= 30 and mandibullary_sim <= 25:
-                score += 2
-            if dorsal_sim <= 18 and anal_sim <= 14:
-                score += 2
-            species_scores["Cryptarius truncatus"] = score
-            
-            # Hexanematichthys sagor characteristics
-            score = 0
-            if 40 <= head_sim <= 60 and 25 <= body_sim <= 38 and eye_sim <= 5:
-                score += 3
-            if maxillary_sim >= 40 and mandibullary_sim >= 28:
-                score += 2
-            if 18 <= dorsal_sim <= 25 and 14 <= anal_sim <= 20:
-                score += 2
-            species_scores["Hexanematichthys sagor"] = score
-            
-            # Nemapteryx macronotacantha characteristics
-            score = 0
-            if head_sim <= 45 and body_sim <= 30 and eye_sim <= 6:
-                score += 3
-            if maxillary_sim <= 35 and mandibullary_sim <= 25:
-                score += 2
-            if dorsal_sim >= 20 and anal_sim <= 16:
-                score += 2
-            species_scores["Nemapteryx macronotacantha"] = score
-            
-            # Nemapteryx nenga characteristics
-            score = 0
-            if head_sim <= 40 and body_sim <= 28 and eye_sim <= 6:
-                score += 3
-            if maxillary_sim <= 32 and mandibullary_sim <= 22:
-                score += 2
-            if dorsal_sim <= 20 and anal_sim <= 15:
-                score += 2
-            species_scores["Nemapteryx nenga"] = score
-            
-            # Osteogeneiosus militaris characteristics
-            score = 0
-            if 45 <= head_sim <= 65 and 30 <= body_sim <= 45 and eye_sim <= 7:
-                score += 3
-            if 35 <= maxillary_sim <= 50 and 25 <= mandibullary_sim <= 35:
-                score += 2
-            if 18 <= dorsal_sim <= 25 and 15 <= anal_sim <= 22:
-                score += 2
-            species_scores["Osteogeneiosus militaris"] = score
-            
-            # Plicofollis argyropleuron characteristics
-            score = 0
-            if 40 <= head_sim <= 55 and 25 <= body_sim <= 35 and eye_sim <= 7:
-                score += 3
-            if 30 <= maxillary_sim <= 45 and 22 <= mandibullary_sim <= 32:
-                score += 2
-            if 16 <= dorsal_sim <= 22 and 13 <= anal_sim <= 18:
-                score += 2
-            species_scores["Plicofollis argyropleuron"] = score
-            
-            # Plicofollis layardi characteristics
-            score = 0
-            if 40 <= head_sim <= 55 and 25 <= body_sim <= 35 and eye_sim <= 7:
-                score += 3
-            if maxillary_sim >= 38 and mandibullary_sim >= 28:
-                score += 2
-            if 16 <= dorsal_sim <= 22 and 13 <= anal_sim <= 18:
-                score += 2
-            species_scores["Plicofollis layardi"] = score
-            
-            # Get species with highest score
-            if max(species_scores.values()) > 0:
-                prediction = max(species_scores, key=species_scores.get)
-            else:
-                # Default prediction based on primary features
-                if head_sim > 55:
-                    prediction = "Arius maculatus"
-                elif body_sim > 35:
-                    prediction = "Arius venosus"
-                elif eye_sim > 7:
-                    prediction = "Cryptarius truncatus"
-                elif maxillary_sim > 45:
-                    prediction = "Hexanematichthys sagor"
-                elif dorsal_sim > 22:
-                    prediction = "Nemapteryx macronotacantha"
-                elif anal_sim > 18:
-                    prediction = "Osteogeneiosus militaris"
-                else:
-                    prediction = "Arius gagora"
-            
-            st.markdown(f"""
-            <div class="prediction-card-sim">
-                <div>🎯 Predicted Species (Simulated Data)</div>
-                <div class="prediction-species">{prediction}</div>
-                <div>🌿 CART Model (Simulated) | 81.2% Accuracy</div>
-                <div style="font-size: 0.9rem; margin-top: 10px;">⚠️ Simulated data model - Comparison purposes only</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.success("""
-            💡 **Conclusion:** Real data with Hybrid CART-SVM (Mode 1) achieves **95.2%** accuracy, 
-            which is **+14.0%** higher than CART on simulated data. 
-            
-            This proves that:
-            1. **Real morphological measurements** produce more accurate classifications
-            2. The **Hybrid CART-SVM approach** significantly outperforms standalone models
-            3. Training on **actual specimen data** is crucial for reliable species identification
-            """)
+            if st.button("🔍 Identify Species (Simulated)", key="mode2_btn_hybrid", use_container_width=True):
+                try:
+                    input_data_sim = np.array([[head_sim, body_sim, eye_sim, snout_sim, maxillary_sim, 
+                                                  mandibullary_sim, mental_sim, dorsal_sim, anal_sim]])
+                    
+                    # Use the same Hybrid CART-SVM pipeline as Mode 1
+                    X_selected = m1_selector.transform(input_data_sim)
+                    X_scaled = m1_scaler_hybrid.transform(X_selected)
+                    X_pca = m1_pca_hybrid.transform(X_scaled)
+                    prediction = m1_svm_hybrid.predict(X_pca)[0]
+                    
+                    # Get species info
+                    species_info = ARIIDAE_SPECIES.get(prediction, {})
+                    data_source = species_info.get('data_source', 'Unknown')
+                    
+                    confidence_badge = "✅ High Confidence (Real-trained species)" if data_source == "Real ✅" else "⚠️ Moderate Confidence (Simulated reference)"
+                    
+                    st.markdown(f"""
+                    <div class="prediction-card-sim">
+                        <div>🎯 Predicted Species (Simulated Data)</div>
+                        <div class="prediction-species">{prediction}</div>
+                        <div>🏆 Hybrid CART-SVM | 95.2% Accuracy</div>
+                        <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
+                        <div style="font-size: 0.8rem; margin-top: 5px;">⚠️ Using same model as Mode 1 - Applied to simulated input</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Show species details
+                    if species_info:
+                        with st.expander("📖 View Species Information"):
+                            col_a, col_b = st.columns(2)
+                            with col_a:
+                                st.markdown(f"**Scientific Name:** {species_info.get('scientific', 'N/A')}")
+                                st.markdown(f"**Common Name:** {species_info.get('common', 'N/A')}")
+                                st.markdown(f"**Size:** {species_info.get('size', 'N/A')}")
+                                st.markdown(f"**Habitat:** {species_info.get('habitat', 'N/A')}")
+                            with col_b:
+                                st.markdown(f"**Diet:** {species_info.get('diet', 'N/A')}")
+                                st.markdown(f"**Features:** {species_info.get('features', 'N/A')}")
+                                st.markdown(f"**Conservation:** {species_info.get('conservation', 'N/A')}")
+                                st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
+                    
+                    # Show comparison with other models
+                    dt_pred = m1_dt.predict(input_data_sim)[0]
+                    svm_pred = m1_svm.predict(m1_scaler.transform(input_data_sim))[0]
+                    knn_pred = m1_knn.predict(m1_scaler.transform(input_data_sim))[0]
+                    
+                    st.markdown("### 📊 Model Comparison for This Input")
+                    comparison_df = pd.DataFrame({
+                        'Model': ['Decision Tree', 'SVM', 'KNN', '🏆 HYBRID CART-SVM'],
+                        'Prediction': [dt_pred, svm_pred, knn_pred, prediction],
+                        'Model Accuracy': ['84.3%', '91.2%', '88.7%', '95.2%']
+                    })
+                    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+                    
+                    st.info("""
+                    💡 **Note:** This demonstrates the Hybrid CART-SVM model's predictions on simulated input data.
+                    The model achieves 95.2% accuracy on real morphological measurements.
+                    """)
+                    
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
 # ============================================
 # TAB 3: SPECIES LIBRARY
