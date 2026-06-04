@@ -126,16 +126,16 @@ st.markdown("""
 st.markdown("""
 <div class="main-header">
     <h1>🐟 Ariidae Fish Classification System</h1>
-    <p style="font-size: 1.1rem;">Hybrid CART-SVM | 6 Real Species | 12 Species Library | 95.2% Accuracy</p>
+    <p style="font-size: 1.1rem;">Hybrid CART-SVM | 6 Real Species | 12 Species Library | 95.4% Accuracy</p>
     <p style="font-size: 0.9rem;">🎓 Final Year Project - Automated Fish Species Identification</p>
 </div>
 """, unsafe_allow_html=True)
 
 # ============================================
-# SPECIES INFORMATION
+# SPECIES INFORMATION (From training code)
 # ============================================
 
-# 6 Real species used for Hybrid CART-SVM training
+# 6 Real species used for Hybrid CART-SVM training (MODE 1)
 REAL_SPECIES_TRAINED = [
     "Arius maculatus",
     "Arius venosus", 
@@ -145,7 +145,7 @@ REAL_SPECIES_TRAINED = [
     "Osteogeneiosus militaris"
 ]
 
-# Complete 12 Ariidae Species Library
+# Complete 12 Ariidae Species Library (Matches training)
 ARIIDAE_SPECIES = {
     "Arius gagora": {
         "scientific": "Arius gagora",
@@ -270,118 +270,121 @@ ARIIDAE_SPECIES = {
 }
 
 # ============================================
-# MODEL PERFORMANCE DATA
+# MODEL PERFORMANCE DATA (From training results)
 # ============================================
 
-MODEL_PERFORMANCE = {
+# MODE 1: Real Data (6 Species) - From your training
+MODEL_PERFORMANCE_REAL = {
     'Decision Tree (CART)': 76.9,
     'SVM (Standalone)': 88.5,
     'KNN': 80.8,
-    '🏆 HYBRID CART-SVM': 95.4
+    '🏆 HYBRID CART-SVM': 95.4  # Optimized Hybrid from training
+}
+
+# MODE 2: Simulated Data (12 Species) - From your training
+MODEL_PERFORMANCE_SIM = {
+    'Decision Tree (CART)': 64.8,
+    'SVM (Standalone)': 92.6,
+    'KNN': 93.5,
+    '🏆 HYBRID CART-SVM': 95.4  # Optimized Hybrid from training
 }
 
 # ============================================
-# LOAD MODELS (UPDATED FOR BOTH MODES USING SAME HYBRID)
+# LOAD MODELS (From training output)
 # ============================================
 
 @st.cache_resource
-def load_hybrid_models():
-    """Load Hybrid CART-SVM models for both modes"""
+def load_all_models():
+    """Load all trained models from both modes"""
+    models = {}
+    
     try:
-        # Mode 1: Real Data Models
-        scaler_real = joblib.load('scaler_real.pkl')
-        cart_real = joblib.load('cart_real.pkl')
-        svm_real = joblib.load('svm_real.pkl')
-        knn_real = joblib.load('knn_real.pkl')
-        features_real = joblib.load('features_real.pkl')
-        classes_real = joblib.load('classes_real.pkl')
+        # MODE 1: Real Data Models
+        models['scaler_real'] = joblib.load('scaler_real.pkl')
+        models['cart_real'] = joblib.load('cart_real.pkl')
+        models['svm_real'] = joblib.load('svm_real.pkl')
+        models['knn_real'] = joblib.load('knn_real.pkl')
+        models['features_real'] = joblib.load('features_real.pkl')
+        models['classes_real'] = joblib.load('classes_real.pkl')
         
-        # Hybrid components for Real Data
+        # MODE 1: Hybrid components
         try:
-            selector_real = joblib.load('feature_selector_real.pkl')
-            scaler_hybrid_real = joblib.load('scaler_hybrid_real.pkl')
-            pca_real = joblib.load('pca_hybrid_real.pkl')
-            svm_hybrid_real = joblib.load('svm_hybrid_real.pkl')
+            models['selector_real'] = joblib.load('feature_selector_real.pkl')
+            models['scaler_hybrid_real'] = joblib.load('scaler_hybrid_real.pkl')
+            models['pca_real'] = joblib.load('pca_hybrid_real.pkl')
+            models['svm_hybrid_real'] = joblib.load('svm_hybrid_real.pkl')
         except:
-            selector_real = None
-            scaler_hybrid_real = None
-            pca_real = None
-            svm_hybrid_real = joblib.load('svm_hybrid_real.pkl')  # Fallback
+            models['selector_real'] = None
+            models['scaler_hybrid_real'] = None
+            models['pca_real'] = None
+            models['svm_hybrid_real'] = joblib.load('svm_hybrid_real.pkl')
         
-        # Mode 2: Simulated Data Models (also using Hybrid)
-        scaler_sim = joblib.load('scaler_sim.pkl')
-        features_sim = joblib.load('features_sim.pkl')
-        classes_sim = joblib.load('classes_sim.pkl')
+        # MODE 2: Simulated Data Models
+        models['scaler_sim'] = joblib.load('scaler_sim.pkl')
+        models['cart_sim'] = joblib.load('cart_sim.pkl')
+        models['svm_sim'] = joblib.load('svm_sim.pkl')
+        models['knn_sim'] = joblib.load('knn_sim.pkl')
+        models['features_sim'] = joblib.load('features_sim.pkl')
+        models['classes_sim'] = joblib.load('classes_sim.pkl')
         
-        # Hybrid components for Simulated Data
+        # MODE 2: Hybrid components
         try:
-            selector_sim = joblib.load('feature_selector_sim.pkl')
-            scaler_hybrid_sim = joblib.load('scaler_hybrid_sim.pkl')
-            pca_sim = joblib.load('pca_hybrid_sim.pkl')
-            svm_hybrid_sim = joblib.load('svm_hybrid_sim.pkl')
+            models['selector_sim'] = joblib.load('feature_selector_sim.pkl')
+            models['scaler_hybrid_sim'] = joblib.load('scaler_hybrid_sim.pkl')
+            models['pca_sim'] = joblib.load('pca_hybrid_sim.pkl')
+            models['svm_hybrid_sim'] = joblib.load('svm_hybrid_sim.pkl')
         except:
-            selector_sim = None
-            scaler_hybrid_sim = None
-            pca_sim = None
-            svm_hybrid_sim = joblib.load('svm_hybrid_sim.pkl')  # Fallback
+            models['selector_sim'] = None
+            models['scaler_hybrid_sim'] = None
+            models['pca_sim'] = None
+            models['svm_hybrid_sim'] = joblib.load('svm_hybrid_sim.pkl')
         
-        return {
-            'scaler_real': scaler_real,
-            'cart_real': cart_real,
-            'svm_real': svm_real,
-            'knn_real': knn_real,
-            'features_real': features_real,
-            'classes_real': classes_real,
-            'selector_real': selector_real,
-            'scaler_hybrid_real': scaler_hybrid_real,
-            'pca_real': pca_real,
-            'svm_hybrid_real': svm_hybrid_real,
-            'scaler_sim': scaler_sim,
-            'features_sim': features_sim,
-            'classes_sim': classes_sim,
-            'selector_sim': selector_sim,
-            'scaler_hybrid_sim': scaler_hybrid_sim,
-            'pca_sim': pca_sim,
-            'svm_hybrid_sim': svm_hybrid_sim
-        }
+        st.success("✅ All models loaded successfully!")
+        return models
     except Exception as e:
         st.error(f"Error loading models: {e}")
         return None
 
-def predict_hybrid(features, models, mode='real'):
-    """Predict using Hybrid CART-SVM pipeline"""
+def predict_hybrid_real(features, models):
+    """Predict using Hybrid CART-SVM for Real Data"""
     try:
-        if mode == 'real':
-            if models['selector_real'] is not None and models['scaler_hybrid_real'] is not None:
-                features_selected = models['selector_real'].transform(features.reshape(1, -1))
-                features_scaled = models['scaler_hybrid_real'].transform(features_selected)
-                if models['pca_real'] is not None:
-                    features_pca = models['pca_real'].transform(features_scaled)
-                    prediction = models['svm_hybrid_real'].predict(features_pca)
-                else:
-                    prediction = models['svm_hybrid_real'].predict(features_scaled)
+        if models['selector_real'] is not None and models['scaler_hybrid_real'] is not None:
+            features_selected = models['selector_real'].transform(features.reshape(1, -1))
+            features_scaled = models['scaler_hybrid_real'].transform(features_selected)
+            if models['pca_real'] is not None:
+                features_pca = models['pca_real'].transform(features_scaled)
+                prediction = models['svm_hybrid_real'].predict(features_pca)
             else:
-                features_scaled = models['scaler_real'].transform(features.reshape(1, -1))
                 prediction = models['svm_hybrid_real'].predict(features_scaled)
-        else:  # simulated mode
-            if models['selector_sim'] is not None and models['scaler_hybrid_sim'] is not None:
-                features_selected = models['selector_sim'].transform(features.reshape(1, -1))
-                features_scaled = models['scaler_hybrid_sim'].transform(features_selected)
-                if models['pca_sim'] is not None:
-                    features_pca = models['pca_sim'].transform(features_scaled)
-                    prediction = models['svm_hybrid_sim'].predict(features_pca)
-                else:
-                    prediction = models['svm_hybrid_sim'].predict(features_scaled)
+        else:
+            features_scaled = models['scaler_real'].transform(features.reshape(1, -1))
+            prediction = models['svm_hybrid_real'].predict(features_scaled)
+        return prediction[0]
+    except Exception as e:
+        st.error(f"Prediction error: {e}")
+        return "Error"
+
+def predict_hybrid_sim(features, models):
+    """Predict using Hybrid CART-SVM for Simulated Data"""
+    try:
+        if models['selector_sim'] is not None and models['scaler_hybrid_sim'] is not None:
+            features_selected = models['selector_sim'].transform(features.reshape(1, -1))
+            features_scaled = models['scaler_hybrid_sim'].transform(features_selected)
+            if models['pca_sim'] is not None:
+                features_pca = models['pca_sim'].transform(features_scaled)
+                prediction = models['svm_hybrid_sim'].predict(features_pca)
             else:
-                features_scaled = models['scaler_sim'].transform(features.reshape(1, -1))
                 prediction = models['svm_hybrid_sim'].predict(features_scaled)
+        else:
+            features_scaled = models['scaler_sim'].transform(features.reshape(1, -1))
+            prediction = models['svm_hybrid_sim'].predict(features_scaled)
         return prediction[0]
     except Exception as e:
         st.error(f"Prediction error: {e}")
         return "Error"
 
 # Load models
-models = load_hybrid_models()
+models = load_all_models()
 
 # ============================================
 # SIDEBAR - MODEL PERFORMANCE
@@ -391,41 +394,55 @@ with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3081/3081559.png", width=80)
     st.markdown("---")
     
-    st.markdown("### 📊 Model Performance")
-    
-    for model, acc in MODEL_PERFORMANCE.items():
+    st.markdown("### 📊 Mode 1: Real Data (6 Species)")
+    for model, acc in MODEL_PERFORMANCE_REAL.items():
         if model == "🏆 HYBRID CART-SVM":
             st.markdown(f"✅ **{model}**: {acc}%")
         else:
             st.markdown(f"   {model}: {acc}%")
     
     st.markdown("---")
-    st.markdown("### 📈 Improvement")
-    st.success("""
-    **Hybrid CART-SVM is BEST!**
+    st.markdown("### 📊 Mode 2: Simulated Data (12 Species)")
+    for model, acc in MODEL_PERFORMANCE_SIM.items():
+        if model == "🏆 HYBRID CART-SVM":
+            st.markdown(f"✅ **{model}**: {acc}%")
+        else:
+            st.markdown(f"   {model}: {acc}%")
     
+    st.markdown("---")
+    st.markdown("### 📈 Key Improvements")
+    st.success("""
+    **Hybrid CART-SVM Performance:**
+    
+    **Mode 1 (Real Data):**
     - +18.5% vs Decision Tree
     - +6.9% vs SVM
     - +14.6% vs KNN
+    
+    **Mode 2 (Simulated Data):**
+    - +30.6% vs Decision Tree
+    - +2.8% vs SVM
+    - +1.9% vs KNN
     """)
     
     st.markdown("---")
     st.markdown("### 🎯 FYP Objective")
     st.info("""
     Prove that **Hybrid CART-SVM** with 
-    **real morphological measurements** 
+    **optimized feature selection & PCA** 
     achieves the highest accuracy for 
     Ariidae fish classification.
     
     **Real species trained:** 6 species
     **Simulated species:** 12 species
+    **Best Accuracy:** 95.4%
     """)
     
     st.markdown("---")
-    st.caption("Final Year Project | 6 Real Species | 12 Species Library")
+    st.caption("Final Year Project | Optimized Hybrid CART-SVM")
 
 # ============================================
-# TABS: HOME | CLASSIFICATION | SPECIES LIBRARY | PERFORMANCE
+# TABS
 # ============================================
 
 tab1, tab2, tab3, tab4 = st.tabs(["🏠 Home", "🔍 Classification", "📚 Species Library", "📊 Performance"])
@@ -438,10 +455,11 @@ with tab1:
     
     st.markdown("""
     <div class="info-box">
-        <strong>📊 Training Data Information:</strong><br>
-        • <strong>Hybrid CART-SVM Model:</strong> Trained and evaluated using <strong>real morphological data</strong> from <strong>6 Ariidae species</strong> with sufficient specimen records<br>
-        • <strong>BOTH MODES use Hybrid CART-SVM:</strong> Both Real Data Mode and Simulated Data Mode now use the optimized Hybrid CART-SVM model for maximum accuracy<br>
-        • The system can classify all 12 species from the library with high accuracy using the Hybrid approach
+        <strong>📊 Training Information (From FYP Training Code):</strong><br>
+        • <strong>MODE 1 (Real Data):</strong> Hybrid CART-SVM trained on <strong>6 real Ariidae species</strong> with real morphological measurements<br>
+        • <strong>MODE 2 (Simulated Data):</strong> Hybrid CART-SVM trained on <strong>12 simulated Ariidae species</strong> for comparison<br>
+        • <strong>Both modes use OPTIMIZED Hybrid CART-SVM</strong> with feature selection, PCA, and GridSearchCV<br>
+        • <strong>Best Accuracy:</strong> 95.4% on both datasets with Hybrid approach
     </div>
     """, unsafe_allow_html=True)
     
@@ -451,18 +469,19 @@ with tab1:
         st.markdown("""
         ### 🎯 System Overview
         
-        This system uses **Hybrid CART-SVM** machine learning approach 
+        This system uses **Optimized Hybrid CART-SVM** machine learning approach 
         to automatically classify **Ariidae fish species** based on 
         **9 morphological measurements**.
         
         #### Key Features:
-        - ✅ **95.4% Accuracy** - Highest among compared models
+        - ✅ **95.4% Accuracy** - Highest among all models
         - ✅ **6 Real Species** - Trained on actual specimen data
         - ✅ **12 Species Library** - Comprehensive Ariidae coverage
         - ✅ **9 Measurements** - Easy data collection
         - ✅ **Real-time Prediction** - Instant results
+        - ✅ **Optimized Pipeline** - Feature selection + PCA + SVM
         
-        #### Model Comparison:
+        #### Model Comparison (Real Data):
         - 🌿 Decision Tree (CART): 76.9%
         - ⚡ SVM Standalone: 88.5%
         - 📊 KNN: 80.8%
@@ -473,22 +492,22 @@ with tab1:
         st.markdown("""
         ### 🐟 Species Training Status
         
-        | No | Species | Data Source |
-        |----|---------|-------------|
-        | 1 | Arius gagora | 📊 Simulated Data |
-        | 2 | Arius leptonotacanthus | 📊 Simulated Data |
-        | 3 | Arius maculatus | ✅ Real Data |
-        | 4 | Arius oetik | 📊 Simulated Data |
-        | 5 | Arius venosus | ✅ Real Data |
-        | 6 | Cryptarius truncatus | ✅ Real Data |
-        | 7 | Hexanematichthys sagor | 📊 Simulated Data |
-        | 8 | Nemapteryx macronotacantha | ✅ Real Data |
-        | 9 | Nemapteryx nenga | ✅ Real Data |
-        | 10 | Osteogeneiosus militaris | ✅ Real Data |
-        | 11 | Plicofollis argyropleuron | 📊 Simulated Data |
-        | 12 | Plicofollis layardi | 📊 Simulated Data |
+        | No | Species | Data Source | Mode |
+        |----|---------|-------------|------|
+        | 1 | Arius gagora | 📊 Simulated | Mode 2 |
+        | 2 | Arius leptonotacanthus | 📊 Simulated | Mode 2 |
+        | 3 | Arius maculatus | ✅ Real | Mode 1 |
+        | 4 | Arius oetik | 📊 Simulated | Mode 2 |
+        | 5 | Arius venosus | ✅ Real | Mode 1 |
+        | 6 | Cryptarius truncatus | ✅ Real | Mode 1 |
+        | 7 | Hexanematichthys sagor | 📊 Simulated | Mode 2 |
+        | 8 | Nemapteryx macronotacantha | ✅ Real | Mode 1 |
+        | 9 | Nemapteryx nenga | ✅ Real | Mode 1 |
+        | 10 | Osteogeneiosus militaris | ✅ Real | Mode 1 |
+        | 11 | Plicofollis argyropleuron | 📊 Simulated | Mode 2 |
+        | 12 | Plicofollis layardi | 📊 Simulated | Mode 2 |
         
-        **Note:** Hybrid model achieves highest accuracy on all species using optimized pipeline.
+        **Note:** Both modes use optimized Hybrid CART-SVM (95.4% accuracy).
         """)
     
     st.markdown("---")
@@ -501,7 +520,7 @@ with tab1:
         st.markdown("""
         <div class="performance-card">
             <div style="font-size: 1.5rem; font-weight: bold;">95.4%</div>
-            <div>Accuracy</div>
+            <div>Hybrid Accuracy</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -509,7 +528,7 @@ with tab1:
         st.markdown("""
         <div class="performance-card">
             <div style="font-size: 1.5rem; font-weight: bold;">6</div>
-            <div>Real Species Trained</div>
+            <div>Real Species</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -536,7 +555,8 @@ with tab1:
         estuaries, and freshwater systems. They play important roles in local 
         fisheries and ecosystem health. Accurate species identification is crucial 
         for fisheries management and conservation efforts.</p>
-        <p><strong>✅ Both Modes:</strong> Real Data Mode and Simulated Data Mode both use the optimized Hybrid CART-SVM model for highest accuracy (95.4%).</p>
+        <p><strong>✅ Hybrid CART-SVM Optimization:</strong> The model uses CART for feature selection, 
+        PCA for dimensionality reduction, and optimized SVM (GridSearchCV) for final classification.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -547,18 +567,19 @@ with tab2:
     st.markdown("## 🔍 Classify Ariidae Fish")
     
     st.markdown('<div class="mode-selector">', unsafe_allow_html=True)
-    sub_tab1, sub_tab2 = st.tabs(["📏 Mode 1: Real Data (Hybrid CART-SVM)", "📈 Mode 2: Simulated Data (Hybrid CART-SVM)"])
+    sub_tab1, sub_tab2 = st.tabs(["📏 Mode 1: Real Data (6 Species)", "📈 Mode 2: Simulated Data (12 Species)"])
     
     # ============================================
-    # MODE 1: REAL DATA (HYBRID CART-SVM)
+    # MODE 1: REAL DATA
     # ============================================
     with sub_tab1:
         st.markdown("### Enter 9 Morphological Measurements")
         st.markdown("""
         <div class="info-box">
-            <strong>ℹ️ Note:</strong> This uses <strong>Hybrid CART-SVM</strong> model trained on <strong>6 real Ariidae species</strong>:
+            <strong>ℹ️ Mode 1: Real Data (6 Species)</strong><br>
+            This uses the <strong>optimized Hybrid CART-SVM</strong> model trained on <strong>6 real Ariidae species</strong>:<br>
             Arius maculatus, Arius venosus, Cryptarius truncatus, Nemapteryx macronotacantha, Nemapteryx nenga, Osteogeneiosus militaris<br>
-            <strong>🏆 Model Accuracy: 95.4%</strong>
+            <strong>🏆 Model Accuracy: 95.4% (Optimized with GridSearchCV + PCA)</strong>
         </div>
         """, unsafe_allow_html=True)
         
@@ -589,21 +610,22 @@ with tab2:
                 try:
                     input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
                     
-                    # Use Hybrid prediction
-                    prediction = predict_hybrid(input_data, models, mode='real')
+                    # Use Optimized Hybrid prediction
+                    prediction = predict_hybrid_real(input_data, models)
                     
                     # Get species info
                     species_info = ARIIDAE_SPECIES.get(prediction, {})
                     data_source = species_info.get('data_source', 'Unknown')
                     
-                    confidence_badge = "✅ High Confidence (Real-trained species)" if data_source == "Real ✅" else "⚠️ Reference Species (Simulated)"
+                    confidence_badge = "✅ High Confidence (Real-trained species)" if data_source == "Real ✅" else "⚠️ Reference Species"
                     
                     st.markdown(f"""
                     <div class="prediction-card">
                         <div>🎯 Predicted Species</div>
                         <div class="prediction-species">{prediction}</div>
-                        <div>🏆 Hybrid CART-SVM | 95.4% Accuracy</div>
+                        <div>🏆 Optimized Hybrid CART-SVM | 95.4% Accuracy</div>
                         <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
+                        <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + Optimized SVM</div>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -640,15 +662,15 @@ with tab2:
                     st.error(f"Error: {e}")
     
     # ============================================
-    # MODE 2: SIMULATED DATA (HYBRID CART-SVM)
+    # MODE 2: SIMULATED DATA
     # ============================================
     with sub_tab2:
-        st.markdown("### Simulated Data Classification (Hybrid CART-SVM)")
+        st.markdown("### Simulated Data Classification (Optimized Hybrid CART-SVM)")
         st.markdown("""
         <div class="info-box">
-            <strong>ℹ️ About this mode:</strong> This mode uses the <strong>same Hybrid CART-SVM model</strong> as Mode 1,
-            applied to <strong>simulated data</strong> for comparison purposes.<br>
-            <strong>🏆 Model Accuracy: 95.4%</strong>
+            <strong>ℹ️ Mode 2: Simulated Data (12 Species)</strong><br>
+            This uses the <strong>optimized Hybrid CART-SVM</strong> model trained on <strong>12 simulated Ariidae species</strong>.<br>
+            <strong>🏆 Model Accuracy: 95.4% (Optimized with GridSearchCV + PCA)</strong>
         </div>
         """, unsafe_allow_html=True)
         
@@ -680,22 +702,22 @@ with tab2:
                     input_data_sim = np.array([[head_sim, body_sim, eye_sim, snout_sim, maxillary_sim, 
                                                   mandibullary_sim, mental_sim, dorsal_sim, anal_sim]])
                     
-                    # Use Hybrid prediction (same model as Mode 1)
-                    prediction = predict_hybrid(input_data_sim, models, mode='real')
+                    # Use Optimized Hybrid prediction for simulated data
+                    prediction = predict_hybrid_sim(input_data_sim, models)
                     
                     # Get species info
                     species_info = ARIIDAE_SPECIES.get(prediction, {})
                     data_source = species_info.get('data_source', 'Unknown')
                     
-                    confidence_badge = "✅ High Confidence (Real-trained species)" if data_source == "Real ✅" else "⚠️ Reference Species (Simulated)"
+                    confidence_badge = "✅ High Confidence" if data_source == "Real ✅" else "📊 Simulated Reference"
                     
                     st.markdown(f"""
                     <div class="prediction-card-sim">
                         <div>🎯 Predicted Species (Simulated Data)</div>
                         <div class="prediction-species">{prediction}</div>
-                        <div>🏆 Hybrid CART-SVM | 95.4% Accuracy</div>
+                        <div>🏆 Optimized Hybrid CART-SVM | 95.4% Accuracy</div>
                         <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
-                        <div style="font-size: 0.8rem; margin-top: 5px;">✅ Using same Hybrid CART-SVM model as Mode 1</div>
+                        <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + Optimized SVM (GridSearchCV)</div>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -715,8 +737,11 @@ with tab2:
                                 st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
                     
                     st.info("""
-                    💡 **Note:** Both Mode 1 and Mode 2 now use the **optimized Hybrid CART-SVM model** 
-                    with 95.4% accuracy on real morphological measurements.
+                    💡 **Note:** Both Mode 1 and Mode 2 use the **optimized Hybrid CART-SVM model** 
+                    with 95.4% accuracy. The model uses:
+                    - Feature Selection (CART/RFE/SelectKBest)
+                    - PCA for dimensionality reduction
+                    - GridSearchCV for SVM parameter optimization
                     """)
                     
                 except Exception as e:
@@ -775,86 +800,107 @@ with tab4:
     
     st.markdown("""
     <div class="info-box">
-        <strong>📊 Evaluation Methodology:</strong><br>
-        • <strong>Hybrid CART-SVM:</strong> 5-fold cross-validation using <strong>real morphological data</strong> from 6 Ariidae species with sufficient specimen records<br>
-        • <strong>Decision Tree & SVM Standalone:</strong> Trained and evaluated on same real dataset for fair comparison<br>
-        • <strong>KNN:</strong> k-Nearest Neighbors with k=5, trained on same real dataset<br>
-        • <strong>BOTH MODES:</strong> Real and Simulated modes both use the optimized Hybrid CART-SVM model (95.4% accuracy)
+        <strong>📊 Evaluation Methodology (From Training Code):</strong><br>
+        • <strong>Optimized Hybrid CART-SVM:</strong> Uses 5 strategies (CART Feature Selection, RFE, SelectKBest, Stacking, Voting)<br>
+        • <strong>GridSearchCV:</strong> 5-fold cross-validation for all baseline models (CART, SVM, KNN)<br>
+        • <strong>PCA:</strong> Dimensionality reduction (85-95% variance)<br>
+        • <strong>Best Strategy Selection:</strong> Automatic selection of highest accuracy hybrid approach
     </div>
     """, unsafe_allow_html=True)
     
-    # Performance bar chart
-    st.markdown("### Model Accuracy Comparison")
+    col1, col2 = st.columns(2)
     
-    fig, ax = plt.subplots(figsize=(10, 6))
-    models_list = list(MODEL_PERFORMANCE.keys())
-    accuracies = list(MODEL_PERFORMANCE.values())
-    colors = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71']
-    bars = ax.bar(models_list, accuracies, color=colors, edgecolor='black', linewidth=1)
-    ax.set_ylabel('Accuracy (%)', fontsize=12)
-    ax.set_title('Model Performance Comparison for Ariidae Classification', fontsize=14)
-    ax.set_ylim(70, 100)
+    with col1:
+        st.markdown("### Mode 1: Real Data (6 Species)")
+        fig1, ax1 = plt.subplots(figsize=(8, 5))
+        models_list1 = list(MODEL_PERFORMANCE_REAL.keys())
+        accuracies1 = list(MODEL_PERFORMANCE_REAL.values())
+        colors1 = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71']
+        bars1 = ax1.bar(models_list1, accuracies1, color=colors1, edgecolor='black', linewidth=1)
+        ax1.set_ylabel('Accuracy (%)', fontsize=12)
+        ax1.set_title('Model Performance - Real Data (6 Species)', fontsize=14)
+        ax1.set_ylim(70, 100)
+        for bar, acc in zip(bars1, accuracies1):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, f'{acc:.1f}%', ha='center', va='bottom', fontweight='bold')
+        plt.xticks(rotation=15, ha='right')
+        plt.tight_layout()
+        st.pyplot(fig1)
     
-    for bar, acc in zip(bars, accuracies):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, f'{acc:.1f}%', ha='center', va='bottom', fontweight='bold')
-    
-    plt.xticks(rotation=15, ha='right')
-    plt.tight_layout()
-    st.pyplot(fig)
+    with col2:
+        st.markdown("### Mode 2: Simulated Data (12 Species)")
+        fig2, ax2 = plt.subplots(figsize=(8, 5))
+        models_list2 = list(MODEL_PERFORMANCE_SIM.keys())
+        accuracies2 = list(MODEL_PERFORMANCE_SIM.values())
+        colors2 = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71']
+        bars2 = ax2.bar(models_list2, accuracies2, color=colors2, edgecolor='black', linewidth=1)
+        ax2.set_ylabel('Accuracy (%)', fontsize=12)
+        ax2.set_title('Model Performance - Simulated Data (12 Species)', fontsize=14)
+        ax2.set_ylim(60, 100)
+        for bar, acc in zip(bars2, accuracies2):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, f'{acc:.1f}%', ha='center', va='bottom', fontweight='bold')
+        plt.xticks(rotation=15, ha='right')
+        plt.tight_layout()
+        st.pyplot(fig2)
     
     # Improvement summary
-    st.markdown("### 📈 Key Findings")
+    st.markdown("### 📈 Key Findings from Training")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
         <div class="performance-card best-model">
-            <h4>🏆 Hybrid CART-SVM Advantages</h4>
-            <p>• <strong>Feature Selection:</strong> DT identifies most important features</p>
-            <p>• <strong>Dimensionality Reduction:</strong> PCA reduces noise</p>
-            <p>• <strong>Powerful Classification:</strong> SVM with RBF kernel</p>
-            <p>• <strong>Cross-validated:</strong> 5-fold CV ensures robustness</p>
-            <p>• <strong>Real Data:</strong> Trained on actual specimen records</p>
-            <p>• <strong>Both Modes:</strong> Same high-accuracy model for consistency</p>
+            <h4>🏆 Mode 1: Real Data (6 Species)</h4>
+            <p>• <strong>Best Model:</strong> Hybrid CART-SVM (95.4%)</p>
+            <p>• Improvement over DT: +18.5%</p>
+            <p>• Improvement over SVM: +6.9%</p>
+            <p>• Improvement over KNN: +14.6%</p>
+            <p>• <strong>Optimization:</strong> GridSearchCV + PCA + Feature Selection</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-        <div class="performance-card">
-            <h4>📊 Performance Summary</h4>
+        <div class="performance-card best-model">
+            <h4>🏆 Mode 2: Simulated Data (12 Species)</h4>
             <p>• <strong>Best Model:</strong> Hybrid CART-SVM (95.4%)</p>
-            <p>• <strong>Improvement over DT:</strong> +18.5%</p>
-            <p>• <strong>Improvement over SVM:</strong> +6.9%</p>
-            <p>• <strong>Improvement over KNN:</strong> +14.6%</p>
-            <p>• <strong>Training Species:</strong> 6 real species</p>
-            <p>• <strong>Library Coverage:</strong> 12 species</p>
-            <p>• <strong>Both Modes:</strong> Using Hybrid CART-SVM</p>
+            <p>• Improvement over DT: +30.6%</p>
+            <p>• Improvement over SVM: +2.8%</p>
+            <p>• Improvement over KNN: +1.9%</p>
+            <p>• <strong>Optimization:</strong> GridSearchCV + PCA + Feature Selection</p>
         </div>
         """, unsafe_allow_html=True)
     
-    # Training data summary
+    # Training summary table
+    st.markdown("### 📋 Complete Training Results Summary")
+    
+    training_summary = pd.DataFrame({
+        'Model': ['CART', 'SVM', 'KNN', '🏆 HYBRID CART-SVM'],
+        'Mode 1 - Real (6 species)': ['76.9%', '88.5%', '80.8%', '95.4%'],
+        'Mode 2 - Simulated (12 species)': ['64.8%', '92.6%', '93.5%', '95.4%']
+    })
+    st.dataframe(training_summary, use_container_width=True, hide_index=True)
+    
     st.markdown("""
-    ### 📋 Training Data Summary
-    
-    | Model | Data Source | Species Coverage | Accuracy |
-    |-------|-------------|-----------------|----------|
-    | Hybrid CART-SVM (Mode 1) | Real morphological data | 6 species | 95.4% |
-    | Hybrid CART-SVM (Mode 2) | Simulated data (same model) | 12 species | 95.4% |
-    | SVM Standalone | Real morphological data | 6 species | 88.5% |
-    | KNN | Real morphological data | 6 species | 80.8% |
-    | Decision Tree | Real morphological data | 6 species | 76.9% |
-    
-    **Note:** Both Mode 1 and Mode 2 now use the optimized Hybrid CART-SVM model for highest accuracy.
-    """)
+    <div class="info-box">
+        <h4>🔬 Optimization Strategies Tested</h4>
+        <p><strong>5 Hybrid Strategies Evaluated:</strong></p>
+        <ul>
+            <li><strong>Strategy 1:</strong> CART Feature Selection + PCA + SVM (multiple thresholds & C values)</li>
+            <li><strong>Strategy 2:</strong> RFE (Recursive Feature Elimination) + SVM</li>
+            <li><strong>Strategy 3:</strong> SelectKBest (ANOVA F-test) + SVM</li>
+            <li><strong>Strategy 4:</strong> Stacking Ensemble (CART + SVM + KNN)</li>
+            <li><strong>Strategy 5:</strong> Voting Classifier (Soft voting)</li>
+        </ul>
+        <p><strong>Best Strategy:</strong> Automatically selected based on highest test accuracy</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Footer
 st.markdown("""
 <div class="footer">
-    <p>🎓 <strong>Final Year Project</strong> | Hybrid CART-SVM for Ariidae Fish Classification</p>
+    <p>🎓 <strong>Final Year Project</strong> | Optimized Hybrid CART-SVM for Ariidae Fish Classification</p>
     <p>🏆 95.4% Accuracy | 6 Real Species Trained | 12 Species Library | 9 Morphological Features</p>
-    <p>📊 Improvement over Decision Tree: +18.5% | Over SVM: +6.9% | Over KNN: +14.6%</p>
-    <p>✅ BOTH MODES: Real Data and Simulated Data using Hybrid CART-SVM (95.4% accuracy)</p>
+    <p>📊 Optimization: Feature Selection + PCA + GridSearchCV | Both modes use Hybrid CART-SVM</p>
 </div>
 """, unsafe_allow_html=True)
