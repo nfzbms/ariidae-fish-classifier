@@ -276,14 +276,14 @@ ARIIDAE_SPECIES = {
 # MODE 1: Real Data (6 Species) - From your training
 MODEL_PERFORMANCE_REAL = {
     'Decision Tree (CART)': 76.9,
-    'SVM (Standalone)': 88.5,
+    'SVM (Standalone)': 84.6,
     'KNN': 80.8,
-    '🏆 HYBRID CART-SVM': 95.4  # Optimized Hybrid from training
+    '🏆 HYBRID CART-SVM': 92.3  # Optimized Hybrid from training
 }
 
 # MODE 2: Simulated Data (12 Species) - From your training
 MODEL_PERFORMANCE_SIM = {
-    'Decision Tree (CART)': 64.8,
+    'Decision Tree (CART)': 89.8,
     'SVM (Standalone)': 92.6,
     'KNN': 93.5,
     '🏆 HYBRID CART-SVM': 95.4  # Optimized Hybrid from training
@@ -483,9 +483,9 @@ with tab1:
         
         #### Model Comparison (Real Data):
         - 🌿 Decision Tree (CART): 76.9%
-        - ⚡ SVM Standalone: 88.5%
+        - ⚡ SVM Standalone: 84.6%
         - 📊 KNN: 80.8%
-        - 🏆 **Hybrid CART-SVM: 95.4%**
+        - 🏆 **Hybrid CART-SVM: 92.3%**
         """)
     
     with col2:
