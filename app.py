@@ -579,7 +579,7 @@ with tab2:
             <strong>ℹ️ Mode 1: Real Data (6 Species)</strong><br>
             This uses the <strong>optimized Hybrid CART-SVM</strong> model trained on <strong>6 real Ariidae species</strong>:<br>
             Arius maculatus, Arius venosus, Cryptarius truncatus, Nemapteryx macronotacantha, Nemapteryx nenga, Osteogeneiosus militaris<br>
-            <strong>🏆 Model Accuracy: 95.4% (Optimized with GridSearchCV + PCA)</strong>
+            <strong>🏆 Model Accuracy: 92.3% (Optimized with GridSearchCV + PCA)</strong>
         </div>
         """, unsafe_allow_html=True)
         
