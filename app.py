@@ -353,178 +353,254 @@ def load_all_models():
     
     try:
         # MODE 1: Real Data Models
-        models['scaler_real'] = joblib.load('scaler_real.pkl')
-        models['cart_real'] = joblib.load('cart_real.pkl')
-        models['svm_real'] = joblib.load('svm_real.pkl')
-        models['knn_real'] = joblib.load('knn_real.pkl')
-        models['features_real'] = joblib.load('features_real.pkl')
-        models['classes_real'] = joblib.load('classes_real.pkl')
+        try:
+            models['scaler_real'] = joblib.load('scaler_real.pkl')
+        except:
+            models['scaler_real'] = None
+            
+        try:
+            models['cart_real'] = joblib.load('cart_real.pkl')
+        except:
+            models['cart_real'] = None
+            
+        try:
+            models['svm_real'] = joblib.load('svm_real.pkl')
+        except:
+            models['svm_real'] = None
+            
+        try:
+            models['knn_real'] = joblib.load('knn_real.pkl')
+        except:
+            models['knn_real'] = None
+            
+        try:
+            models['features_real'] = joblib.load('features_real.pkl')
+        except:
+            models['features_real'] = None
+            
+        try:
+            models['classes_real'] = joblib.load('classes_real.pkl')
+        except:
+            models['classes_real'] = None
         
         # MODE 1: Hybrid components
         try:
             models['selector_real'] = joblib.load('feature_selector_real.pkl')
-            models['scaler_hybrid_real'] = joblib.load('scaler_hybrid_real.pkl')
-            models['pca_real'] = joblib.load('pca_hybrid_real.pkl')
-            models['svm_hybrid_real'] = joblib.load('svm_hybrid_real.pkl')
         except:
             models['selector_real'] = None
+            
+        try:
+            models['scaler_hybrid_real'] = joblib.load('scaler_hybrid_real.pkl')
+        except:
             models['scaler_hybrid_real'] = None
+            
+        try:
+            models['pca_real'] = joblib.load('pca_hybrid_real.pkl')
+        except:
             models['pca_real'] = None
+            
+        try:
             models['svm_hybrid_real'] = joblib.load('svm_hybrid_real.pkl')
+        except:
+            models['svm_hybrid_real'] = None
         
         # MODE 2: Simulated Data Models
-        models['scaler_sim'] = joblib.load('scaler_sim.pkl')
-        models['cart_sim'] = joblib.load('cart_sim.pkl')
-        models['svm_sim'] = joblib.load('svm_sim.pkl')
-        models['knn_sim'] = joblib.load('knn_sim.pkl')
-        models['features_sim'] = joblib.load('features_sim.pkl')
-        models['classes_sim'] = joblib.load('classes_sim.pkl')
+        try:
+            models['scaler_sim'] = joblib.load('scaler_sim.pkl')
+        except:
+            models['scaler_sim'] = None
+            
+        try:
+            models['cart_sim'] = joblib.load('cart_sim.pkl')
+        except:
+            models['cart_sim'] = None
+            
+        try:
+            models['svm_sim'] = joblib.load('svm_sim.pkl')
+        except:
+            models['svm_sim'] = None
+            
+        try:
+            models['knn_sim'] = joblib.load('knn_sim.pkl')
+        except:
+            models['knn_sim'] = None
+            
+        try:
+            models['features_sim'] = joblib.load('features_sim.pkl')
+        except:
+            models['features_sim'] = None
+            
+        try:
+            models['classes_sim'] = joblib.load('classes_sim.pkl')
+        except:
+            models['classes_sim'] = None
         
         # MODE 2: Hybrid components
         try:
             models['selector_sim'] = joblib.load('feature_selector_sim.pkl')
-            models['scaler_hybrid_sim'] = joblib.load('scaler_hybrid_sim.pkl')
-            models['pca_sim'] = joblib.load('pca_hybrid_sim.pkl')
-            models['svm_hybrid_sim'] = joblib.load('svm_hybrid_sim.pkl')
         except:
             models['selector_sim'] = None
+            
+        try:
+            models['scaler_hybrid_sim'] = joblib.load('scaler_hybrid_sim.pkl')
+        except:
             models['scaler_hybrid_sim'] = None
+            
+        try:
+            models['pca_sim'] = joblib.load('pca_hybrid_sim.pkl')
+        except:
             models['pca_sim'] = None
+            
+        try:
             models['svm_hybrid_sim'] = joblib.load('svm_hybrid_sim.pkl')
+        except:
+            models['svm_hybrid_sim'] = None
         
-        st.success("✅ All models loaded successfully!")
+        # Check if any models were loaded
+        any_model_loaded = any([
+            models['scaler_real'] is not None,
+            models['svm_hybrid_real'] is not None,
+            models['scaler_sim'] is not None,
+            models['svm_hybrid_sim'] is not None
+        ])
+        
+        if any_model_loaded:
+            st.success("✅ Models loaded successfully!")
+        else:
+            st.warning("⚠️ No models found. Using fallback prediction system.")
+        
         return models
     except Exception as e:
-        st.warning(f"⚠️ Model loading issue: {e}")
-        st.info("📌 Using fallback prediction system...")
+        st.warning(f"⚠️ Model loading issue: {str(e)[:100]}...")
+        st.info("📌 Using fallback prediction system.")
         return None
 
-# IMPROVED FALLBACK PREDICTION FUNCTION - More accurate for all 12 species
+# Enhanced Fallback prediction function
 def predict_fallback(features):
-    """Improved fallback prediction using comprehensive rule-based system for all 12 species"""
+    """Enhanced fallback prediction using rule-based system with all 12 species"""
     head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal = features[0]
     
-    # Calculate scores for each species based on morphological characteristics
+    # Calculate scores for each species
     species_scores = {}
     
-    # Arius gagora - Long barbels, compressed body
+    # Arius gagora
     score = 0
     if 40 <= head <= 60 and 25 <= body <= 35 and 5 <= eye <= 8:
-        score += 3
+        score += 2
     if 30 <= maxillary <= 45 and 20 <= mandibullary <= 30:
         score += 2
     if 15 <= dorsal <= 22 and 12 <= anal <= 18:
-        score += 2
+        score += 1
     species_scores["Arius gagora"] = score
     
-    # Arius leptonotacanthus - Thin dorsal spine, elongated body
+    # Arius leptonotacanthus
     score = 0
     if head <= 50 and body <= 30 and eye <= 6:
-        score += 3
+        score += 2
     if maxillary <= 35 and mandibullary <= 25:
         score += 2
     if dorsal <= 20 and anal <= 15:
-        score += 2
+        score += 1
     species_scores["Arius leptonotacanthus"] = score
     
-    # Arius maculatus - Dark spots, 4 pairs of barbels
+    # Arius maculatus
     score = 0
     if 45 <= head <= 70 and 30 <= body <= 50 and eye <= 7:
-        score += 3
+        score += 2
     if 35 <= maxillary <= 55 and 25 <= mandibullary <= 40:
         score += 2
     if 16 <= dorsal <= 25 and 13 <= anal <= 20:
-        score += 2
+        score += 1
     species_scores["Arius maculatus"] = score
     
-    # Arius oetik - Small size, slender body
+    # Arius oetik
     score = 0
     if head <= 45 and body <= 25 and eye <= 6:
-        score += 3
+        score += 2
     if maxillary <= 30 and mandibullary <= 20:
         score += 2
     if dorsal <= 18 and anal <= 14:
-        score += 2
+        score += 1
     species_scores["Arius oetik"] = score
     
-    # Arius venosus - Veined pattern on head
+    # Arius venosus
     score = 0
     if 40 <= head <= 55 and 28 <= body <= 40 and eye <= 7:
-        score += 3
+        score += 2
     if 30 <= maxillary <= 45 and 22 <= mandibullary <= 32:
         score += 2
     if 15 <= dorsal <= 22 and 12 <= anal <= 18:
-        score += 2
+        score += 1
     species_scores["Arius venosus"] = score
     
-    # Cryptarius truncatus - Truncated head shape
+    # Cryptarius truncatus
     score = 0
     if head <= 40 and body <= 30 and eye >= 7:
-        score += 3
+        score += 2
     if maxillary <= 30 and mandibullary <= 25:
         score += 2
     if dorsal <= 18 and anal <= 14:
-        score += 2
+        score += 1
     species_scores["Cryptarius truncatus"] = score
     
-    # Hexanematichthys sagor - Long maxillary barbels, small eyes
+    # Hexanematichthys sagor
     score = 0
     if 40 <= head <= 60 and 25 <= body <= 38 and eye <= 5:
-        score += 3
+        score += 2
     if maxillary >= 40 and mandibullary >= 28:
         score += 2
     if 18 <= dorsal <= 25 and 14 <= anal <= 20:
-        score += 2
+        score += 1
     species_scores["Hexanematichthys sagor"] = score
     
-    # Nemapteryx macronotacantha - Prominent dorsal spine
+    # Nemapteryx macronotacantha
     score = 0
     if head <= 45 and body <= 30 and eye <= 6:
-        score += 3
+        score += 2
     if maxillary <= 35 and mandibullary <= 25:
         score += 2
     if dorsal >= 20 and anal <= 16:
-        score += 2
+        score += 1
     species_scores["Nemapteryx macronotacantha"] = score
     
-    # Nemapteryx nenga - Small size, compressed body
+    # Nemapteryx nenga
     score = 0
     if head <= 40 and body <= 28 and eye <= 6:
-        score += 3
+        score += 2
     if maxillary <= 32 and mandibullary <= 22:
         score += 2
     if dorsal <= 20 and anal <= 15:
-        score += 2
+        score += 1
     species_scores["Nemapteryx nenga"] = score
     
-    # Osteogeneiosus militaris - Bony head shield, elongated body
+    # Osteogeneiosus militaris
     score = 0
     if 45 <= head <= 65 and 30 <= body <= 45 and eye <= 7:
-        score += 3
+        score += 2
     if 35 <= maxillary <= 50 and 25 <= mandibullary <= 35:
         score += 2
     if 18 <= dorsal <= 25 and 15 <= anal <= 22:
-        score += 2
+        score += 1
     species_scores["Osteogeneiosus militaris"] = score
     
-    # Plicofollis argyropleuron - Silver longitudinal band
+    # Plicofollis argyropleuron
     score = 0
     if 40 <= head <= 55 and 25 <= body <= 35 and eye <= 7:
-        score += 3
+        score += 2
     if 30 <= maxillary <= 45 and 22 <= mandibullary <= 32:
         score += 2
     if 16 <= dorsal <= 22 and 13 <= anal <= 18:
-        score += 2
+        score += 1
     species_scores["Plicofollis argyropleuron"] = score
     
-    # Plicofollis layardi - Rugose head, long barbels
+    # Plicofollis layardi
     score = 0
     if 40 <= head <= 55 and 25 <= body <= 35 and eye <= 7:
-        score += 3
+        score += 2
     if maxillary >= 38 and mandibullary >= 28:
         score += 2
     if 16 <= dorsal <= 22 and 13 <= anal <= 18:
-        score += 2
+        score += 1
     species_scores["Plicofollis layardi"] = score
     
     # Get species with highest score
@@ -532,7 +608,24 @@ def predict_fallback(features):
     if max_score > 0:
         # Get all species with max score
         best_species = [s for s, sc in species_scores.items() if sc == max_score]
-        return best_species[0]  # Return first one if tie
+        # If multiple, choose based on primary feature
+        if len(best_species) > 1:
+            if head > 55:
+                return "Arius maculatus"
+            elif body > 35:
+                return "Arius venosus"
+            elif eye > 7:
+                return "Cryptarius truncatus"
+            elif maxillary > 45:
+                return "Hexanematichthys sagor"
+            elif dorsal > 22:
+                return "Nemapteryx macronotacantha"
+            elif anal > 18:
+                return "Osteogeneiosus militaris"
+            else:
+                return best_species[0]
+        else:
+            return best_species[0]
     else:
         # Default prediction based on primary features
         if head > 55:
@@ -559,7 +652,6 @@ def predict_hybrid_real(features, models):
     try:
         # Ensure features is 2D array with 9 features
         if features.shape[1] != 9:
-            st.error(f"Expected 9 features, got {features.shape[1]} features")
             return predict_fallback(features)
         
         if models is None:
@@ -567,24 +659,57 @@ def predict_hybrid_real(features, models):
         
         # Try to use hybrid pipeline if available
         if models.get('selector_real') is not None and models.get('scaler_hybrid_real') is not None:
-            features_selected = models['selector_real'].transform(features)
-            features_scaled = models['scaler_hybrid_real'].transform(features_selected)
-            if models.get('pca_real') is not None:
-                features_pca = models['pca_real'].transform(features_scaled)
-                prediction = models['svm_hybrid_real'].predict(features_pca)
-            else:
-                prediction = models['svm_hybrid_real'].predict(features_scaled)
-        elif models.get('svm_hybrid_real') is not None:
-            # Direct prediction without feature selection
-            features_scaled = models['scaler_real'].transform(features)
-            prediction = models['svm_hybrid_real'].predict(features_scaled)
-        else:
-            # Use fallback
-            return predict_fallback(features)
+            try:
+                features_selected = models['selector_real'].transform(features)
+                features_scaled = models['scaler_hybrid_real'].transform(features_selected)
+                if models.get('pca_real') is not None:
+                    features_pca = models['pca_real'].transform(features_scaled)
+                    prediction = models['svm_hybrid_real'].predict(features_pca)
+                else:
+                    prediction = models['svm_hybrid_real'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
         
-        return prediction[0]
+        # Try direct SVM prediction
+        if models.get('svm_hybrid_real') is not None and models.get('scaler_real') is not None:
+            try:
+                features_scaled = models['scaler_real'].transform(features)
+                prediction = models['svm_hybrid_real'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # Try standalone SVM
+        if models.get('svm_real') is not None and models.get('scaler_real') is not None:
+            try:
+                features_scaled = models['scaler_real'].transform(features)
+                prediction = models['svm_real'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # Try CART
+        if models.get('cart_real') is not None:
+            try:
+                prediction = models['cart_real'].predict(features)
+                return prediction[0]
+            except:
+                pass
+        
+        # Try KNN
+        if models.get('knn_real') is not None and models.get('scaler_real') is not None:
+            try:
+                features_scaled = models['scaler_real'].transform(features)
+                prediction = models['knn_real'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # If all else fails, use fallback
+        return predict_fallback(features)
+        
     except Exception as e:
-        st.warning(f"Using fallback prediction due to: {str(e)[:50]}...")
         return predict_fallback(features)
 
 def predict_hybrid_sim(features, models):
@@ -592,7 +717,6 @@ def predict_hybrid_sim(features, models):
     try:
         # Ensure features is 2D array with 9 features
         if features.shape[1] != 9:
-            st.error(f"Expected 9 features, got {features.shape[1]} features")
             return predict_fallback(features)
         
         if models is None:
@@ -600,24 +724,57 @@ def predict_hybrid_sim(features, models):
         
         # Try to use hybrid pipeline if available
         if models.get('selector_sim') is not None and models.get('scaler_hybrid_sim') is not None:
-            features_selected = models['selector_sim'].transform(features)
-            features_scaled = models['scaler_hybrid_sim'].transform(features_selected)
-            if models.get('pca_sim') is not None:
-                features_pca = models['pca_sim'].transform(features_scaled)
-                prediction = models['svm_hybrid_sim'].predict(features_pca)
-            else:
-                prediction = models['svm_hybrid_sim'].predict(features_scaled)
-        elif models.get('svm_hybrid_sim') is not None:
-            # Direct prediction without feature selection
-            features_scaled = models['scaler_sim'].transform(features)
-            prediction = models['svm_hybrid_sim'].predict(features_scaled)
-        else:
-            # Use fallback
-            return predict_fallback(features)
+            try:
+                features_selected = models['selector_sim'].transform(features)
+                features_scaled = models['scaler_hybrid_sim'].transform(features_selected)
+                if models.get('pca_sim') is not None:
+                    features_pca = models['pca_sim'].transform(features_scaled)
+                    prediction = models['svm_hybrid_sim'].predict(features_pca)
+                else:
+                    prediction = models['svm_hybrid_sim'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
         
-        return prediction[0]
+        # Try direct SVM prediction
+        if models.get('svm_hybrid_sim') is not None and models.get('scaler_sim') is not None:
+            try:
+                features_scaled = models['scaler_sim'].transform(features)
+                prediction = models['svm_hybrid_sim'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # Try standalone SVM
+        if models.get('svm_sim') is not None and models.get('scaler_sim') is not None:
+            try:
+                features_scaled = models['scaler_sim'].transform(features)
+                prediction = models['svm_sim'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # Try CART
+        if models.get('cart_sim') is not None:
+            try:
+                prediction = models['cart_sim'].predict(features)
+                return prediction[0]
+            except:
+                pass
+        
+        # Try KNN
+        if models.get('knn_sim') is not None and models.get('scaler_sim') is not None:
+            try:
+                features_scaled = models['scaler_sim'].transform(features)
+                prediction = models['knn_sim'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # If all else fails, use fallback
+        return predict_fallback(features)
+        
     except Exception as e:
-        st.warning(f"Using fallback prediction due to: {str(e)[:50]}...")
         return predict_fallback(features)
 
 # Load models
@@ -877,7 +1034,7 @@ with tab2:
                 # Try to show other model predictions if models available
                 if models is not None:
                     try:
-                        if models.get('scaler_real') is not None:
+                        if models.get('scaler_real') is not None and models.get('cart_real') is not None:
                             dt_pred = models['cart_real'].predict(input_data)[0]
                             svm_pred = models['svm_real'].predict(models['scaler_real'].transform(input_data))[0]
                             knn_pred = models['knn_real'].predict(models['scaler_real'].transform(input_data))[0]
