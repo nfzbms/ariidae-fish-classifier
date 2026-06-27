@@ -429,7 +429,7 @@ def predict_hybrid_real(features, models):
     try:
         # Ensure features is 2D array with 9 features
         if features.shape[1] != 9:
-            st.warning(f"Expected 9 features, got {features.shape[1]} features. Using fallback.")
+            st.error(f"Expected 9 features, got {features.shape[1]} features")
             return predict_fallback(features)
         
         if models is None:
@@ -437,23 +437,17 @@ def predict_hybrid_real(features, models):
         
         # Try to use hybrid pipeline if available
         if models.get('selector_real') is not None and models.get('scaler_hybrid_real') is not None:
-            # Step 1: Feature Selection using selector
             features_selected = models['selector_real'].transform(features)
-            # Step 2: Scale using hybrid scaler
             features_scaled = models['scaler_hybrid_real'].transform(features_selected)
-            # Step 3: PCA transformation if available
             if models.get('pca_real') is not None:
                 features_pca = models['pca_real'].transform(features_scaled)
                 prediction = models['svm_hybrid_real'].predict(features_pca)
             else:
                 prediction = models['svm_hybrid_real'].predict(features_scaled)
         elif models.get('svm_hybrid_real') is not None:
-            # Direct prediction with scaling only
-            if models.get('scaler_real') is not None:
-                features_scaled = models['scaler_real'].transform(features)
-                prediction = models['svm_hybrid_real'].predict(features_scaled)
-            else:
-                prediction = models['svm_hybrid_real'].predict(features)
+            # Direct prediction without feature selection
+            features_scaled = models['scaler_real'].transform(features)
+            prediction = models['svm_hybrid_real'].predict(features_scaled)
         else:
             # Use fallback
             return predict_fallback(features)
@@ -468,7 +462,7 @@ def predict_hybrid_sim(features, models):
     try:
         # Ensure features is 2D array with 9 features
         if features.shape[1] != 9:
-            st.warning(f"Expected 9 features, got {features.shape[1]} features. Using fallback.")
+            st.error(f"Expected 9 features, got {features.shape[1]} features")
             return predict_fallback(features)
         
         if models is None:
@@ -476,23 +470,17 @@ def predict_hybrid_sim(features, models):
         
         # Try to use hybrid pipeline if available
         if models.get('selector_sim') is not None and models.get('scaler_hybrid_sim') is not None:
-            # Step 1: Feature Selection using selector
             features_selected = models['selector_sim'].transform(features)
-            # Step 2: Scale using hybrid scaler
             features_scaled = models['scaler_hybrid_sim'].transform(features_selected)
-            # Step 3: PCA transformation if available
             if models.get('pca_sim') is not None:
                 features_pca = models['pca_sim'].transform(features_scaled)
                 prediction = models['svm_hybrid_sim'].predict(features_pca)
             else:
                 prediction = models['svm_hybrid_sim'].predict(features_scaled)
         elif models.get('svm_hybrid_sim') is not None:
-            # Direct prediction with scaling only
-            if models.get('scaler_sim') is not None:
-                features_scaled = models['scaler_sim'].transform(features)
-                prediction = models['svm_hybrid_sim'].predict(features_scaled)
-            else:
-                prediction = models['svm_hybrid_sim'].predict(features)
+            # Direct prediction without feature selection
+            features_scaled = models['scaler_sim'].transform(features)
+            prediction = models['svm_hybrid_sim'].predict(features_scaled)
         else:
             # Use fallback
             return predict_fallback(features)
@@ -722,61 +710,57 @@ with tab2:
         
         if st.button("🔍 Identify Species", key="mode1_btn", use_container_width=True):
             try:
-                # Create input array with exactly 9 features
+                # Create input array with 9 features
                 input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
                 
-                # Verify input shape
-                if input_data.shape[1] != 9:
-                    st.error(f"Expected 9 features, got {input_data.shape[1]} features. Please enter all measurements.")
-                else:
-                    prediction = predict_hybrid_real(input_data, models)
-                    
-                    species_info = ARIIDAE_SPECIES.get(prediction, {})
-                    data_source = species_info.get('data_source', 'Unknown')
-                    
-                    confidence_badge = "✅ High Confidence (Real-trained species)" if data_source == "Real ✅" else "⚠️ Reference Species"
-                    
-                    st.markdown(f"""
-                    <div class="prediction-card">
-                        <div>🎯 Predicted Species</div>
-                        <div class="prediction-species">{prediction}</div>
-                        <div>🏆 Optimized Hybrid CART-SVM | 92.3% Accuracy</div>
-                        <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
-                        <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + GridSearchCV</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    if species_info:
-                        with st.expander("📖 View Species Information"):
-                            col_a, col_b = st.columns(2)
-                            with col_a:
-                                st.markdown(f"**Scientific Name:** {species_info.get('scientific', 'N/A')}")
-                                st.markdown(f"**Common Name:** {species_info.get('common', 'N/A')}")
-                                st.markdown(f"**Size:** {species_info.get('size', 'N/A')}")
-                                st.markdown(f"**Habitat:** {species_info.get('habitat', 'N/A')}")
-                            with col_b:
-                                st.markdown(f"**Diet:** {species_info.get('diet', 'N/A')}")
-                                st.markdown(f"**Features:** {species_info.get('features', 'N/A')}")
-                                st.markdown(f"**Conservation:** {species_info.get('conservation', 'N/A')}")
-                                st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
-                    
-                    # Try to show other model predictions if models available
-                    if models is not None:
-                        try:
-                            if models.get('scaler_real') is not None and models.get('cart_real') is not None:
-                                dt_pred = models['cart_real'].predict(input_data)[0]
-                                svm_pred = models['svm_real'].predict(models['scaler_real'].transform(input_data))[0]
-                                knn_pred = models['knn_real'].predict(models['scaler_real'].transform(input_data))[0]
-                                
-                                st.markdown("### 📊 Model Comparison for This Input")
-                                comparison_df = pd.DataFrame({
-                                    'Model': ['Decision Tree', 'SVM', 'KNN', '🏆 HYBRID CART-SVM'],
-                                    'Prediction': [dt_pred, svm_pred, knn_pred, prediction],
-                                    'Model Accuracy': ['76.9%', '84.6%', '80.8%', '92.3%']
-                                })
-                                st.dataframe(comparison_df, use_container_width=True, hide_index=True)
-                        except Exception as e:
-                            pass
+                prediction = predict_hybrid_real(input_data, models)
+                
+                species_info = ARIIDAE_SPECIES.get(prediction, {})
+                data_source = species_info.get('data_source', 'Unknown')
+                
+                confidence_badge = "✅ High Confidence (Real-trained species)" if data_source == "Real ✅" else "⚠️ Reference Species"
+                
+                st.markdown(f"""
+                <div class="prediction-card">
+                    <div>🎯 Predicted Species</div>
+                    <div class="prediction-species">{prediction}</div>
+                    <div>🏆 Optimized Hybrid CART-SVM | 92.3% Accuracy</div>
+                    <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
+                    <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + GridSearchCV</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if species_info:
+                    with st.expander("📖 View Species Information"):
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            st.markdown(f"**Scientific Name:** {species_info.get('scientific', 'N/A')}")
+                            st.markdown(f"**Common Name:** {species_info.get('common', 'N/A')}")
+                            st.markdown(f"**Size:** {species_info.get('size', 'N/A')}")
+                            st.markdown(f"**Habitat:** {species_info.get('habitat', 'N/A')}")
+                        with col_b:
+                            st.markdown(f"**Diet:** {species_info.get('diet', 'N/A')}")
+                            st.markdown(f"**Features:** {species_info.get('features', 'N/A')}")
+                            st.markdown(f"**Conservation:** {species_info.get('conservation', 'N/A')}")
+                            st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
+                
+                # Try to show other model predictions if models available
+                if models is not None:
+                    try:
+                        if models.get('scaler_real') is not None:
+                            dt_pred = models['cart_real'].predict(input_data)[0]
+                            svm_pred = models['svm_real'].predict(models['scaler_real'].transform(input_data))[0]
+                            knn_pred = models['knn_real'].predict(models['scaler_real'].transform(input_data))[0]
+                            
+                            st.markdown("### 📊 Model Comparison for This Input")
+                            comparison_df = pd.DataFrame({
+                                'Model': ['Decision Tree', 'SVM', 'KNN', '🏆 HYBRID CART-SVM'],
+                                'Prediction': [dt_pred, svm_pred, knn_pred, prediction],
+                                'Model Accuracy': ['76.9%', '84.6%', '80.8%', '92.3%']
+                            })
+                            st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+                    except:
+                        pass
                 
             except Exception as e:
                 st.error(f"Error: {e}")
@@ -816,49 +800,45 @@ with tab2:
         
         if st.button("🔍 Identify Species (Simulated)", key="mode2_btn", use_container_width=True):
             try:
-                # Create input array with exactly 9 features
+                # Create input array with 9 features
                 input_data_sim = np.array([[head_sim, body_sim, eye_sim, snout_sim, maxillary_sim, 
                                               mandibullary_sim, mental_sim, dorsal_sim, anal_sim]])
                 
-                # Verify input shape
-                if input_data_sim.shape[1] != 9:
-                    st.error(f"Expected 9 features, got {input_data_sim.shape[1]} features. Please enter all measurements.")
-                else:
-                    prediction = predict_hybrid_sim(input_data_sim, models)
-                    
-                    species_info = ARIIDAE_SPECIES.get(prediction, {})
-                    data_source = species_info.get('data_source', 'Unknown')
-                    
-                    confidence_badge = "✅ High Confidence" if data_source == "Real ✅" else "📊 Simulated Reference"
-                    
-                    st.markdown(f"""
-                    <div class="prediction-card-sim">
-                        <div>🎯 Predicted Species (Simulated Data)</div>
-                        <div class="prediction-species">{prediction}</div>
-                        <div>🏆 Optimized Hybrid CART-SVM | 95.4% Accuracy (BEST!)</div>
-                        <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
-                        <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + GridSearchCV</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    if species_info:
-                        with st.expander("📖 View Species Information"):
-                            col_a, col_b = st.columns(2)
-                            with col_a:
-                                st.markdown(f"**Scientific Name:** {species_info.get('scientific', 'N/A')}")
-                                st.markdown(f"**Common Name:** {species_info.get('common', 'N/A')}")
-                                st.markdown(f"**Size:** {species_info.get('size', 'N/A')}")
-                                st.markdown(f"**Habitat:** {species_info.get('habitat', 'N/A')}")
-                            with col_b:
-                                st.markdown(f"**Diet:** {species_info.get('diet', 'N/A')}")
-                                st.markdown(f"**Features:** {species_info.get('features', 'N/A')}")
-                                st.markdown(f"**Conservation:** {species_info.get('conservation', 'N/A')}")
-                                st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
-                    
-                    st.info("""
-                    💡 **FYP Conclusion:** The Optimized Hybrid CART-SVM achieves **95.4% accuracy** on simulated data 
-                    and **92.3% accuracy** on real data, outperforming all standalone models (CART, SVM, KNN)!
-                    """)
+                prediction = predict_hybrid_sim(input_data_sim, models)
+                
+                species_info = ARIIDAE_SPECIES.get(prediction, {})
+                data_source = species_info.get('data_source', 'Unknown')
+                
+                confidence_badge = "✅ High Confidence" if data_source == "Real ✅" else "📊 Simulated Reference"
+                
+                st.markdown(f"""
+                <div class="prediction-card-sim">
+                    <div>🎯 Predicted Species (Simulated Data)</div>
+                    <div class="prediction-species">{prediction}</div>
+                    <div>🏆 Optimized Hybrid CART-SVM | 95.4% Accuracy (BEST!)</div>
+                    <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
+                    <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + GridSearchCV</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if species_info:
+                    with st.expander("📖 View Species Information"):
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            st.markdown(f"**Scientific Name:** {species_info.get('scientific', 'N/A')}")
+                            st.markdown(f"**Common Name:** {species_info.get('common', 'N/A')}")
+                            st.markdown(f"**Size:** {species_info.get('size', 'N/A')}")
+                            st.markdown(f"**Habitat:** {species_info.get('habitat', 'N/A')}")
+                        with col_b:
+                            st.markdown(f"**Diet:** {species_info.get('diet', 'N/A')}")
+                            st.markdown(f"**Features:** {species_info.get('features', 'N/A')}")
+                            st.markdown(f"**Conservation:** {species_info.get('conservation', 'N/A')}")
+                            st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
+                
+                st.info("""
+                💡 **FYP Conclusion:** The Optimized Hybrid CART-SVM achieves **95.4% accuracy** on simulated data 
+                and **92.3% accuracy** on real data, outperforming all standalone models (CART, SVM, KNN)!
+                """)
                 
             except Exception as e:
                 st.error(f"Error: {e}")
