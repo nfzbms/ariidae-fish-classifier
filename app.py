@@ -366,11 +366,13 @@ def load_all_models():
             models['scaler_hybrid_real'] = joblib.load('scaler_hybrid_real.pkl')
             models['pca_real'] = joblib.load('pca_hybrid_real.pkl')
             models['svm_hybrid_real'] = joblib.load('svm_hybrid_real.pkl')
+            models['hybrid_loaded_real'] = True
         except:
             models['selector_real'] = None
             models['scaler_hybrid_real'] = None
             models['pca_real'] = None
-            models['svm_hybrid_real'] = joblib.load('svm_hybrid_real.pkl')
+            models['svm_hybrid_real'] = None
+            models['hybrid_loaded_real'] = False
         
         # MODE 2: Simulated Data Models
         models['scaler_sim'] = joblib.load('scaler_sim.pkl')
@@ -386,17 +388,19 @@ def load_all_models():
             models['scaler_hybrid_sim'] = joblib.load('scaler_hybrid_sim.pkl')
             models['pca_sim'] = joblib.load('pca_hybrid_sim.pkl')
             models['svm_hybrid_sim'] = joblib.load('svm_hybrid_sim.pkl')
+            models['hybrid_loaded_sim'] = True
         except:
             models['selector_sim'] = None
             models['scaler_hybrid_sim'] = None
             models['pca_sim'] = None
-            models['svm_hybrid_sim'] = joblib.load('svm_hybrid_sim.pkl')
+            models['svm_hybrid_sim'] = None
+            models['hybrid_loaded_sim'] = False
         
         st.success("✅ All models loaded successfully!")
         return models
     except Exception as e:
         st.warning(f"⚠️ Model loading issue: {e}")
-        st.info("📌 Using fallback prediction system...")
+        st.info("📌 Using standalone models for prediction...")
         return None
 
 # Fallback prediction function when models are not available
@@ -427,7 +431,6 @@ def predict_fallback(features):
 def predict_hybrid_real(features, models):
     """Predict using Hybrid CART-SVM for Real Data"""
     try:
-        # Ensure features is 2D array with 9 features
         if features.shape[1] != 9:
             st.error(f"Expected 9 features, got {features.shape[1]} features")
             return predict_fallback(features)
@@ -435,32 +438,58 @@ def predict_hybrid_real(features, models):
         if models is None:
             return predict_fallback(features)
         
-        # Try to use hybrid pipeline if available
-        if models.get('selector_real') is not None and models.get('scaler_hybrid_real') is not None:
-            features_selected = models['selector_real'].transform(features)
-            features_scaled = models['scaler_hybrid_real'].transform(features_selected)
-            if models.get('pca_real') is not None:
-                features_pca = models['pca_real'].transform(features_scaled)
-                prediction = models['svm_hybrid_real'].predict(features_pca)
-            else:
-                prediction = models['svm_hybrid_real'].predict(features_scaled)
-        elif models.get('svm_hybrid_real') is not None:
-            # Direct prediction without feature selection
-            features_scaled = models['scaler_real'].transform(features)
-            prediction = models['svm_hybrid_real'].predict(features_scaled)
-        else:
-            # Use fallback
-            return predict_fallback(features)
+        # TRY HYBRID MODEL FIRST (PREFERRED)
+        if models.get('hybrid_loaded_real', False):
+            try:
+                # Use full hybrid pipeline
+                features_selected = models['selector_real'].transform(features)
+                features_scaled = models['scaler_hybrid_real'].transform(features_selected)
+                if models.get('pca_real') is not None:
+                    features_pca = models['pca_real'].transform(features_scaled)
+                    prediction = models['svm_hybrid_real'].predict(features_pca)
+                else:
+                    prediction = models['svm_hybrid_real'].predict(features_scaled)
+                return prediction[0]
+            except Exception as e:
+                st.warning(f"Hybrid model error, trying standalone SVM: {str(e)[:30]}...")
+                # Fall through to standalone SVM
         
-        return prediction[0]
+        # TRY STANDALONE SVM (SECOND CHOICE)
+        if models.get('svm_real') is not None and models.get('scaler_real') is not None:
+            try:
+                features_scaled = models['scaler_real'].transform(features)
+                prediction = models['svm_real'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # TRY STANDALONE KNN (THIRD CHOICE)
+        if models.get('knn_real') is not None and models.get('scaler_real') is not None:
+            try:
+                features_scaled = models['scaler_real'].transform(features)
+                prediction = models['knn_real'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # TRY STANDALONE CART (FOURTH CHOICE)
+        if models.get('cart_real') is not None:
+            try:
+                prediction = models['cart_real'].predict(features)
+                return prediction[0]
+            except:
+                pass
+        
+        # FINAL FALLBACK
+        return predict_fallback(features)
+        
     except Exception as e:
-        st.warning(f"Using fallback prediction due to: {str(e)[:50]}...")
+        st.warning(f"Prediction error, using fallback: {str(e)[:30]}...")
         return predict_fallback(features)
 
 def predict_hybrid_sim(features, models):
     """Predict using Hybrid CART-SVM for Simulated Data"""
     try:
-        # Ensure features is 2D array with 9 features
         if features.shape[1] != 9:
             st.error(f"Expected 9 features, got {features.shape[1]} features")
             return predict_fallback(features)
@@ -468,30 +497,61 @@ def predict_hybrid_sim(features, models):
         if models is None:
             return predict_fallback(features)
         
-        # Try to use hybrid pipeline if available
-        if models.get('selector_sim') is not None and models.get('scaler_hybrid_sim') is not None:
-            features_selected = models['selector_sim'].transform(features)
-            features_scaled = models['scaler_hybrid_sim'].transform(features_selected)
-            if models.get('pca_sim') is not None:
-                features_pca = models['pca_sim'].transform(features_scaled)
-                prediction = models['svm_hybrid_sim'].predict(features_pca)
-            else:
-                prediction = models['svm_hybrid_sim'].predict(features_scaled)
-        elif models.get('svm_hybrid_sim') is not None:
-            # Direct prediction without feature selection
-            features_scaled = models['scaler_sim'].transform(features)
-            prediction = models['svm_hybrid_sim'].predict(features_scaled)
-        else:
-            # Use fallback
-            return predict_fallback(features)
+        # TRY HYBRID MODEL FIRST (PREFERRED)
+        if models.get('hybrid_loaded_sim', False):
+            try:
+                # Use full hybrid pipeline
+                features_selected = models['selector_sim'].transform(features)
+                features_scaled = models['scaler_hybrid_sim'].transform(features_selected)
+                if models.get('pca_sim') is not None:
+                    features_pca = models['pca_sim'].transform(features_scaled)
+                    prediction = models['svm_hybrid_sim'].predict(features_pca)
+                else:
+                    prediction = models['svm_hybrid_sim'].predict(features_scaled)
+                return prediction[0]
+            except Exception as e:
+                st.warning(f"Hybrid model error, trying standalone SVM: {str(e)[:30]}...")
+                # Fall through to standalone SVM
         
-        return prediction[0]
+        # TRY STANDALONE SVM (SECOND CHOICE)
+        if models.get('svm_sim') is not None and models.get('scaler_sim') is not None:
+            try:
+                features_scaled = models['scaler_sim'].transform(features)
+                prediction = models['svm_sim'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # TRY STANDALONE KNN (THIRD CHOICE)
+        if models.get('knn_sim') is not None and models.get('scaler_sim') is not None:
+            try:
+                features_scaled = models['scaler_sim'].transform(features)
+                prediction = models['knn_sim'].predict(features_scaled)
+                return prediction[0]
+            except:
+                pass
+        
+        # TRY STANDALONE CART (FOURTH CHOICE)
+        if models.get('cart_sim') is not None:
+            try:
+                prediction = models['cart_sim'].predict(features)
+                return prediction[0]
+            except:
+                pass
+        
+        # FINAL FALLBACK
+        return predict_fallback(features)
+        
     except Exception as e:
-        st.warning(f"Using fallback prediction due to: {str(e)[:50]}...")
+        st.warning(f"Prediction error, using fallback: {str(e)[:30]}...")
         return predict_fallback(features)
 
 # Load models
 models = load_all_models()
+
+# Check if hybrid models are loaded
+hybrid_real_available = models is not None and models.get('hybrid_loaded_real', False)
+hybrid_sim_available = models is not None and models.get('hybrid_loaded_sim', False)
 
 # ============================================
 # SIDEBAR - MODEL PERFORMANCE
@@ -504,7 +564,8 @@ with st.sidebar:
     st.markdown("### 📊 Mode 1: Real Data (6 Species)")
     for model, acc in MODEL_PERFORMANCE_REAL.items():
         if model == "🏆 HYBRID CART-SVM":
-            st.markdown(f"✅ **{model}**: {acc}%")
+            status = "✅" if hybrid_real_available else "⚠️"
+            st.markdown(f"{status} **{model}**: {acc}%")
         else:
             st.markdown(f"   {model}: {acc}%")
     
@@ -512,7 +573,8 @@ with st.sidebar:
     st.markdown("### 📊 Mode 2: Simulated Data (12 Species)")
     for model, acc in MODEL_PERFORMANCE_SIM.items():
         if model == "🏆 HYBRID CART-SVM":
-            st.markdown(f"✅ **{model}**: {acc}%")
+            status = "✅" if hybrid_sim_available else "⚠️"
+            st.markdown(f"{status} **{model}**: {acc}%")
         else:
             st.markdown(f"   {model}: {acc}%")
     
@@ -710,7 +772,6 @@ with tab2:
         
         if st.button("🔍 Identify Species", key="mode1_btn", use_container_width=True):
             try:
-                # Create input array with 9 features
                 input_data = np.array([[head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal]])
                 
                 prediction = predict_hybrid_real(input_data, models)
@@ -718,13 +779,18 @@ with tab2:
                 species_info = ARIIDAE_SPECIES.get(prediction, {})
                 data_source = species_info.get('data_source', 'Unknown')
                 
+                # Check if hybrid was used
+                hybrid_used = models is not None and models.get('hybrid_loaded_real', False)
+                model_name = "🏆 Optimized Hybrid CART-SVM" if hybrid_used else "SVM Standalone"
+                model_acc = "92.3%" if hybrid_used else "84.6%"
+                
                 confidence_badge = "✅ High Confidence (Real-trained species)" if data_source == "Real ✅" else "⚠️ Reference Species"
                 
                 st.markdown(f"""
                 <div class="prediction-card">
                     <div>🎯 Predicted Species</div>
                     <div class="prediction-species">{prediction}</div>
-                    <div>🏆 Optimized Hybrid CART-SVM | 92.3% Accuracy</div>
+                    <div>{model_name} | {model_acc} Accuracy</div>
                     <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
                     <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + GridSearchCV</div>
                 </div>
@@ -744,7 +810,7 @@ with tab2:
                             st.markdown(f"**Conservation:** {species_info.get('conservation', 'N/A')}")
                             st.markdown(f"**Data Source:** {species_info.get('data_source', 'N/A')}")
                 
-                # Try to show other model predictions if models available
+                # Show model comparison if models available
                 if models is not None:
                     try:
                         if models.get('scaler_real') is not None:
@@ -752,10 +818,24 @@ with tab2:
                             svm_pred = models['svm_real'].predict(models['scaler_real'].transform(input_data))[0]
                             knn_pred = models['knn_real'].predict(models['scaler_real'].transform(input_data))[0]
                             
+                            # Try hybrid prediction for comparison
+                            hybrid_pred = prediction
+                            if models.get('hybrid_loaded_real', False):
+                                try:
+                                    features_selected = models['selector_real'].transform(input_data)
+                                    features_scaled = models['scaler_hybrid_real'].transform(features_selected)
+                                    if models.get('pca_real') is not None:
+                                        features_pca = models['pca_real'].transform(features_scaled)
+                                        hybrid_pred = models['svm_hybrid_real'].predict(features_pca)[0]
+                                    else:
+                                        hybrid_pred = models['svm_hybrid_real'].predict(features_scaled)[0]
+                                except:
+                                    pass
+                            
                             st.markdown("### 📊 Model Comparison for This Input")
                             comparison_df = pd.DataFrame({
                                 'Model': ['Decision Tree', 'SVM', 'KNN', '🏆 HYBRID CART-SVM'],
-                                'Prediction': [dt_pred, svm_pred, knn_pred, prediction],
+                                'Prediction': [dt_pred, svm_pred, knn_pred, hybrid_pred],
                                 'Model Accuracy': ['76.9%', '84.6%', '80.8%', '92.3%']
                             })
                             st.dataframe(comparison_df, use_container_width=True, hide_index=True)
@@ -800,7 +880,6 @@ with tab2:
         
         if st.button("🔍 Identify Species (Simulated)", key="mode2_btn", use_container_width=True):
             try:
-                # Create input array with 9 features
                 input_data_sim = np.array([[head_sim, body_sim, eye_sim, snout_sim, maxillary_sim, 
                                               mandibullary_sim, mental_sim, dorsal_sim, anal_sim]])
                 
@@ -809,13 +888,18 @@ with tab2:
                 species_info = ARIIDAE_SPECIES.get(prediction, {})
                 data_source = species_info.get('data_source', 'Unknown')
                 
+                # Check if hybrid was used
+                hybrid_used = models is not None and models.get('hybrid_loaded_sim', False)
+                model_name = "🏆 Optimized Hybrid CART-SVM" if hybrid_used else "SVM Standalone"
+                model_acc = "95.4%" if hybrid_used else "92.6%"
+                
                 confidence_badge = "✅ High Confidence" if data_source == "Real ✅" else "📊 Simulated Reference"
                 
                 st.markdown(f"""
                 <div class="prediction-card-sim">
                     <div>🎯 Predicted Species (Simulated Data)</div>
                     <div class="prediction-species">{prediction}</div>
-                    <div>🏆 Optimized Hybrid CART-SVM | 95.4% Accuracy (BEST!)</div>
+                    <div>{model_name} | {model_acc} Accuracy (BEST!)</div>
                     <div style="font-size: 0.9rem; margin-top: 10px;">{confidence_badge}</div>
                     <div style="font-size: 0.8rem;">✅ Feature Selection + PCA + GridSearchCV</div>
                 </div>
