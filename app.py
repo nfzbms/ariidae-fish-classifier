@@ -399,30 +399,160 @@ def load_all_models():
         st.info("📌 Using fallback prediction system...")
         return None
 
-# Fallback prediction function when models are not available
+# IMPROVED FALLBACK PREDICTION FUNCTION - More accurate for all 12 species
 def predict_fallback(features):
-    """Fallback prediction using rule-based system"""
+    """Improved fallback prediction using comprehensive rule-based system for all 12 species"""
     head, body, eye, snout, maxillary, mandibullary, mental, dorsal, anal = features[0]
     
-    # Rule-based prediction logic
-    if head > 55:
-        return "Arius maculatus"
-    elif body > 35:
-        return "Arius venosus"
-    elif eye > 7:
-        return "Cryptarius truncatus"
-    elif maxillary > 45:
-        return "Hexanematichthys sagor"
-    elif dorsal > 22:
-        return "Nemapteryx macronotacantha"
-    elif anal > 18:
-        return "Osteogeneiosus militaris"
-    elif head < 40 and body < 25:
-        return "Arius oetik"
-    elif maxillary < 30 and mandibullary < 20:
-        return "Arius leptonotacanthus"
+    # Calculate scores for each species based on morphological characteristics
+    species_scores = {}
+    
+    # Arius gagora - Long barbels, compressed body
+    score = 0
+    if 40 <= head <= 60 and 25 <= body <= 35 and 5 <= eye <= 8:
+        score += 3
+    if 30 <= maxillary <= 45 and 20 <= mandibullary <= 30:
+        score += 2
+    if 15 <= dorsal <= 22 and 12 <= anal <= 18:
+        score += 2
+    species_scores["Arius gagora"] = score
+    
+    # Arius leptonotacanthus - Thin dorsal spine, elongated body
+    score = 0
+    if head <= 50 and body <= 30 and eye <= 6:
+        score += 3
+    if maxillary <= 35 and mandibullary <= 25:
+        score += 2
+    if dorsal <= 20 and anal <= 15:
+        score += 2
+    species_scores["Arius leptonotacanthus"] = score
+    
+    # Arius maculatus - Dark spots, 4 pairs of barbels
+    score = 0
+    if 45 <= head <= 70 and 30 <= body <= 50 and eye <= 7:
+        score += 3
+    if 35 <= maxillary <= 55 and 25 <= mandibullary <= 40:
+        score += 2
+    if 16 <= dorsal <= 25 and 13 <= anal <= 20:
+        score += 2
+    species_scores["Arius maculatus"] = score
+    
+    # Arius oetik - Small size, slender body
+    score = 0
+    if head <= 45 and body <= 25 and eye <= 6:
+        score += 3
+    if maxillary <= 30 and mandibullary <= 20:
+        score += 2
+    if dorsal <= 18 and anal <= 14:
+        score += 2
+    species_scores["Arius oetik"] = score
+    
+    # Arius venosus - Veined pattern on head
+    score = 0
+    if 40 <= head <= 55 and 28 <= body <= 40 and eye <= 7:
+        score += 3
+    if 30 <= maxillary <= 45 and 22 <= mandibullary <= 32:
+        score += 2
+    if 15 <= dorsal <= 22 and 12 <= anal <= 18:
+        score += 2
+    species_scores["Arius venosus"] = score
+    
+    # Cryptarius truncatus - Truncated head shape
+    score = 0
+    if head <= 40 and body <= 30 and eye >= 7:
+        score += 3
+    if maxillary <= 30 and mandibullary <= 25:
+        score += 2
+    if dorsal <= 18 and anal <= 14:
+        score += 2
+    species_scores["Cryptarius truncatus"] = score
+    
+    # Hexanematichthys sagor - Long maxillary barbels, small eyes
+    score = 0
+    if 40 <= head <= 60 and 25 <= body <= 38 and eye <= 5:
+        score += 3
+    if maxillary >= 40 and mandibullary >= 28:
+        score += 2
+    if 18 <= dorsal <= 25 and 14 <= anal <= 20:
+        score += 2
+    species_scores["Hexanematichthys sagor"] = score
+    
+    # Nemapteryx macronotacantha - Prominent dorsal spine
+    score = 0
+    if head <= 45 and body <= 30 and eye <= 6:
+        score += 3
+    if maxillary <= 35 and mandibullary <= 25:
+        score += 2
+    if dorsal >= 20 and anal <= 16:
+        score += 2
+    species_scores["Nemapteryx macronotacantha"] = score
+    
+    # Nemapteryx nenga - Small size, compressed body
+    score = 0
+    if head <= 40 and body <= 28 and eye <= 6:
+        score += 3
+    if maxillary <= 32 and mandibullary <= 22:
+        score += 2
+    if dorsal <= 20 and anal <= 15:
+        score += 2
+    species_scores["Nemapteryx nenga"] = score
+    
+    # Osteogeneiosus militaris - Bony head shield, elongated body
+    score = 0
+    if 45 <= head <= 65 and 30 <= body <= 45 and eye <= 7:
+        score += 3
+    if 35 <= maxillary <= 50 and 25 <= mandibullary <= 35:
+        score += 2
+    if 18 <= dorsal <= 25 and 15 <= anal <= 22:
+        score += 2
+    species_scores["Osteogeneiosus militaris"] = score
+    
+    # Plicofollis argyropleuron - Silver longitudinal band
+    score = 0
+    if 40 <= head <= 55 and 25 <= body <= 35 and eye <= 7:
+        score += 3
+    if 30 <= maxillary <= 45 and 22 <= mandibullary <= 32:
+        score += 2
+    if 16 <= dorsal <= 22 and 13 <= anal <= 18:
+        score += 2
+    species_scores["Plicofollis argyropleuron"] = score
+    
+    # Plicofollis layardi - Rugose head, long barbels
+    score = 0
+    if 40 <= head <= 55 and 25 <= body <= 35 and eye <= 7:
+        score += 3
+    if maxillary >= 38 and mandibullary >= 28:
+        score += 2
+    if 16 <= dorsal <= 22 and 13 <= anal <= 18:
+        score += 2
+    species_scores["Plicofollis layardi"] = score
+    
+    # Get species with highest score
+    max_score = max(species_scores.values())
+    if max_score > 0:
+        # Get all species with max score
+        best_species = [s for s, sc in species_scores.items() if sc == max_score]
+        return best_species[0]  # Return first one if tie
     else:
-        return "Arius gagora"
+        # Default prediction based on primary features
+        if head > 55:
+            return "Arius maculatus"
+        elif body > 35:
+            return "Arius venosus"
+        elif eye > 7:
+            return "Cryptarius truncatus"
+        elif maxillary > 45:
+            return "Hexanematichthys sagor"
+        elif dorsal > 22:
+            return "Nemapteryx macronotacantha"
+        elif anal > 18:
+            return "Osteogeneiosus militaris"
+        elif head < 40 and body < 25:
+            return "Arius oetik"
+        elif maxillary < 30 and mandibullary < 20:
+            return "Arius leptonotacanthus"
+        else:
+            return "Arius gagora"
 
 def predict_hybrid_real(features, models):
     """Predict using Hybrid CART-SVM for Real Data"""
