@@ -1144,11 +1144,11 @@ with tab4:
     <div class="info-box">
         <h4>🔬 Optimization Strategies Tested (5 Strategies)</h4>
         <ul>
-            <li><strong>Strategy 1:</strong> CART Feature Selection + PCA + SVM (multiple thresholds & C values)</li>
+            <li><strong>Strategy 1:</strong> CART  + PCA + SVM </li>
             <li><strong>Strategy 2:</strong> RFE (Recursive Feature Elimination) + SVM</li>
-            <li><strong>Strategy 3:</strong> SelectKBest (ANOVA F-test) + SVM</li>
-            <li><strong>Strategy 4:</strong> Stacking Ensemble (CART + SVM + KNN)</li>
-            <li><strong>Strategy 5:</strong> Voting Classifier (Soft voting)</li>
+            <li><strong>Strategy 3:</strong> SelectKBest  + SVM</li>
+            <li><strong>Strategy 4:</strong> Stacking Ensemble </li>
+            <li><strong>Strategy 5:</strong> Voting Classifier </li>
         </ul>
         <p><strong>✅ CONCLUSION:</strong> Hybrid CART-SVM achieves HIGHEST accuracy in BOTH modes!</p>
     </div>
